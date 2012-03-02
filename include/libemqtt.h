@@ -33,7 +33,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#define KEEPALIVE 15000
 
 #define MQTT_MSG_CONNECT       1<<4
 #define MQTT_MSG_CONNACK       2<<4
@@ -50,10 +49,6 @@
 #define MQTT_MSG_PINGRESP     13<<4
 #define MQTT_MSG_DISCONNECT   14<<4
 
-#define MQTT_QOS0 0
-#define MQTT_QOS1 1
-#define MQTT_QOS2 2
-
 
 typedef struct {
 	int socket;
@@ -62,6 +57,8 @@ typedef struct {
 	char hostname[128];
 	char clientid[24];
 	int connected;
+	uint16_t seq;
+	uint16_t alive;
 } mqtt_broker_handle_t;
 
 
@@ -71,14 +68,22 @@ typedef struct {
 } mqtt_callback_data_t;
 
 
+
 /**
  * @param broker
- * @param keepalive
+ * @param hostname
+ * @param port
+ * @param clientid
+ **/
+void mqtt_broker_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid);
+
+/**
+ * @param broker
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_connect(mqtt_broker_handle_t *broker, uint16_t keepalive);
+int mqtt_connect(mqtt_broker_handle_t *broker);
 
 /**
  * @param broker
@@ -96,7 +101,7 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker);
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg);
+int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg, uint8_t retain);
 
 /**
  * @param broker

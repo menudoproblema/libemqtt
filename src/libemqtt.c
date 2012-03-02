@@ -30,16 +30,37 @@
 #include <unistd.h>
 #include <libemqtt.h>
 
+#define MQTT_DUP_FLAG     1<<3
+#define MQTT_QOS0_FLAG    0<<1
+#define MQTT_QOS1_FLAG    1<<1
+#define MQTT_QOS2_FLAG    2<<1
+#define MQTT_RETAIN_FLAG  1
 
-int mqtt_connect(mqtt_broker_handle_t *broker, uint16_t keepalive)
+
+void mqtt_broker_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid)
 {
-	int clientidlen = strlen(broker->clientid);
+	// Connection options
+	broker->connected = 0;
+	broker->alive = 300; // 300 seconds = 5 minutes
+	broker->seq = 0; // Sequency for message indetifiers
+	// Client identifier
+	if(clientid)
+		strcpy(broker->clientid, clientid);
+	else
+		strcpy(broker->clientid, "emqtt");
+	// Socket options
+	broker->port = port ? port : 1883;
+	strcpy(broker->hostname, hostname);
+}
 
+int mqtt_connect(mqtt_broker_handle_t *broker)
+{
 	if((broker->socket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 		return 0;
 
+	int clientidlen = strlen(broker->clientid);
+
 	// Create the stuff we need to connect
-	broker->connected = 0;
 	broker->socket_address.sin_family = AF_INET;
 	broker->socket_address.sin_port = htons(broker->port);
 	broker->socket_address.sin_addr.s_addr = inet_addr(broker->hostname);
@@ -48,19 +69,19 @@ int mqtt_connect(mqtt_broker_handle_t *broker, uint16_t keepalive)
 	if((connect(broker->socket, (struct sockaddr *)&broker->socket_address, sizeof(broker->socket_address))) < 0)
 		return -1;
 
-	// Fixed header
-	uint8_t fixed_header[] = {
-		MQTT_MSG_CONNECT, // Message Type, DUP flag, QoS level, Retain
-		12+strlen(broker->clientid)+2 // Remaining length
-	};
-
 	// Variable header
 	uint8_t var_header[] = {
 		0x00,0x06,0x4d,0x51,0x49,0x73,0x64,0x70, // Protocol name: MQIsdp
 		0x03, // Protocol version
 		0x02, // Connect flags (0x02 = clear session)
-		keepalive>>4, keepalive&0xF,
+		broker->alive>>4, broker->alive&0xF, // Keep alive
 		0x00, clientidlen
+	};
+
+	// Fixed header
+	uint8_t fixed_header[] = {
+		MQTT_MSG_CONNECT, // Message Type, DUP flag, QoS level, Retain
+		sizeof(var_header)+strlen(broker->clientid) // Remaining length
 	};
 
 	uint8_t packet[sizeof(fixed_header)+sizeof(var_header)+clientidlen];
@@ -120,7 +141,7 @@ int mqtt_ping(mqtt_broker_handle_t *broker)
 	return 1;
 }
 
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg)
+int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg, uint8_t retain)
 {
 	if(!broker->connected)
 		return 0;
@@ -128,15 +149,19 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg)
 	int topiclen = strlen(topic);
 	int msglen = strlen(msg);
 
+	// Variable header
 	uint8_t var_header[topiclen+2];
 	memset(var_header, 0, topiclen+2);
 	var_header[1] = topiclen;
 	memcpy(var_header+2, topic, topiclen);
 
+	// Fixed header
 	uint8_t fixed_header[] = {
 		MQTT_MSG_PUBLISH, // Message Type, DUP flag, QoS level, Retain
 		sizeof(var_header)+msglen // Remaining length
 	};
+	if(retain)
+		fixed_header[0] |= MQTT_RETAIN_FLAG;
 
 	uint8_t packet[sizeof(fixed_header)+sizeof(var_header)+msglen];
 	memset(packet, 0, sizeof(packet));
@@ -156,25 +181,28 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic, void *(*call
 	if(!broker->connected)
 		return 0;
 
-	uint8_t var_header[] = {0,10};
+	int topiclen = strlen(topic);
+
+	// Variable header
+	uint8_t var_header[] = {0x00, 0x0a}; // Message ID
+
+	// Fixed header
 	uint8_t fixed_header[] = {
-		MQTT_MSG_SUBSCRIBE, // Message Type, DUP flag, QoS level, Retain
-		sizeof(var_header)+strlen(topic)+3
+		MQTT_MSG_SUBSCRIBE | MQTT_QOS1_FLAG, // Message Type, DUP flag, QoS level, Retain
+		sizeof(var_header)+topiclen+3
 	};
 
 	// utf topic
-	uint8_t utf_topic[strlen(topic)+3];
-	strcpy((char *)&utf_topic[2], topic);
+	uint8_t utf_topic[topiclen+2];
+	memset(utf_topic, 0, topiclen+2);
+	utf_topic[1] = topiclen;
+	memcpy(utf_topic+2, topic, topiclen);
 
-	utf_topic[0] = 0;
-	utf_topic[1] = strlen(topic);
-	utf_topic[sizeof(utf_topic)-1] = 0;
-
-	char packet[sizeof(var_header)+sizeof(fixed_header)+strlen(topic)+3];
-	memset(packet,0,sizeof(packet));
-	memcpy(packet,fixed_header,sizeof(fixed_header));
-	memcpy(packet+sizeof(fixed_header),var_header,sizeof(var_header));
-	memcpy(packet+sizeof(fixed_header)+sizeof(var_header),utf_topic,sizeof(utf_topic));
+	uint8_t packet[sizeof(var_header)+sizeof(fixed_header)+sizeof(utf_topic)];
+	memset(packet, 0, sizeof(packet));
+	memcpy(packet, fixed_header, sizeof(fixed_header));
+	memcpy(packet+sizeof(fixed_header), var_header, sizeof(var_header));
+	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), utf_topic, sizeof(utf_topic));
 
 	// Send the packet
 	if(send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet))

@@ -29,18 +29,14 @@
 
 int main(int argc, char **argv) {
 	int result;
-	uint16_t alive = 2; // Alive for 2 seconds
-	char msg[128];
 	mqtt_broker_handle_t broker;
 
-	broker.port = 1883;
-	strcpy(broker.hostname, "127.0.0.1");
-	strcpy(broker.clientid, "libemqtt pub");
+	mqtt_broker_init(&broker, "192.168.10.40", 1883, "libemqtt pub");
 
-	result = mqtt_connect(&broker, alive);
+	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);
 
-	mqtt_publish(&broker, "hello/emqtt", msg);
+	mqtt_publish(&broker, "hello/emqtt", "It's me", 1);
 
 	mqtt_disconnect(&broker);
 	return 0;

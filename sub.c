@@ -30,14 +30,11 @@
 
 int main() {
 	mqtt_broker_handle_t broker;
-	uint16_t keepalive = 2;
 	int result, count = 0;
 
-	broker.port = 1883;
-	strcpy(broker.hostname, "192.168.10.40");
-	strcpy(broker.clientid, "libemqtt sub");
+	mqtt_broker_init(&broker, "192.168.10.40", 1883, "libemqtt sub");
 
-	result = mqtt_connect(&broker, keepalive);
+	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);
 
 	result = mqtt_subscribe(&broker, "hello/emqtt", NULL);
