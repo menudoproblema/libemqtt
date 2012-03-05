@@ -176,7 +176,7 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg, uin
 	return 1;
 }
 
-int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic, void *(*callback)(mqtt_callback_data_t *))
+int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 {
 	if(!broker->connected)
 		return 0;

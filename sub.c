@@ -37,7 +37,7 @@ int main() {
 	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);
 
-	result = mqtt_subscribe(&broker, "hello/emqtt", NULL);
+	result = mqtt_subscribe(&broker, "hello/emqtt");
 	printf("Subscribe: %d\n", result);
 
 	// Keep alive for 10 pings

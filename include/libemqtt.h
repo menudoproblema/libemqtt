@@ -62,12 +62,6 @@ typedef struct {
 } mqtt_broker_handle_t;
 
 
-typedef struct {
-	mqtt_broker_handle_t *broker;
-	char *msg;
-} mqtt_callback_data_t;
-
-
 
 /**
  * @param broker
@@ -106,12 +100,11 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg, uin
 /**
  * @param broker
  * @param topic
- * @param callback
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic, void *(*callback)(mqtt_callback_data_t *));
+int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic);
 
 /**
  * @param broker
