@@ -31,7 +31,7 @@
 
 int socket_id;
 
-int send_packet(void *socket_info, const void *buf, size_t count)
+int send_packet(void *socket_info, const void *buf, unsigned int count)
 {
 	return write(*((int *)socket_info), buf, count);
 }
@@ -57,6 +57,11 @@ int init_socket(mqtt_broker_handle_t *broker)
 	return 0;
 }
 
+int close_socket(mqtt_broker_handle_t *broker)
+{
+	return close(*(int *)broker->socket_info);
+}
+
 
 int main(int argc, char **argv) {
 	int result;
@@ -71,6 +76,7 @@ int main(int argc, char **argv) {
 	mqtt_publish(&broker, "hello/emqtt", "It's me", 1);
 
 	mqtt_disconnect(&broker);
+	close_socket(&broker);
 	return 0;
 }
 

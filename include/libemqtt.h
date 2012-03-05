@@ -49,7 +49,7 @@
 
 typedef struct {
 	void * socket_info;
-	int (*send)(void *socket_info, const void *buf, size_t count);
+	int (*send)(void *socket_info, const void *buf, unsigned int count);
 	short port;
 	char hostname[128];
 	char clientid[24];
