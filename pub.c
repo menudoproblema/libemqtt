@@ -22,9 +22,40 @@
  *
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <libemqtt.h>
+
+#include <stdio.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+
+int socket_id;
+
+int send_packet(void *socket_info, const void *buf, size_t count)
+{
+	return write(*((int *)socket_info), buf, count);
+}
+
+int init_socket(mqtt_broker_handle_t *broker)
+{
+	if((socket_id = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+		return -1;
+
+	struct sockaddr_in socket_address;
+	// Create the stuff we need to connect
+	socket_address.sin_family = AF_INET;
+	socket_address.sin_port = htons(broker->port);
+	socket_address.sin_addr.s_addr = inet_addr(broker->hostname);
+
+	// Connect
+	if((connect(socket_id, (struct sockaddr *)&socket_address, sizeof(socket_address))) < 0)
+		return -1;
+
+	broker->socket_info = (void *)&socket_id;
+	broker->send = send_packet;
+
+	return 0;
+}
 
 
 int main(int argc, char **argv) {
@@ -32,6 +63,7 @@ int main(int argc, char **argv) {
 	mqtt_broker_handle_t broker;
 
 	mqtt_broker_init(&broker, "192.168.10.40", 1883, "libemqtt pub");
+	init_socket(&broker);
 
 	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);

@@ -28,10 +28,7 @@
 #ifndef __LIBEMQTT_H__
 #define __LIBEMQTT_H__
 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <stdint.h>
 
 
 #define MQTT_MSG_CONNECT       1<<4
@@ -51,8 +48,8 @@
 
 
 typedef struct {
-	int socket;
-	struct sockaddr_in socket_address;
+	void * socket_info;
+	int (*send)(void *socket_info, const void *buf, size_t count);
 	short port;
 	char hostname[128];
 	char clientid[24];

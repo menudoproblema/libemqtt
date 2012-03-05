@@ -26,8 +26,6 @@
  */
 
 #include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <libemqtt.h>
 
 #define MQTT_DUP_FLAG     1<<3
@@ -43,31 +41,19 @@ void mqtt_broker_init(mqtt_broker_handle_t *broker, const char* hostname, short 
 	broker->connected = 0;
 	broker->alive = 300; // 300 seconds = 5 minutes
 	broker->seq = 0; // Sequency for message indetifiers
-	// Client identifier
+	// Client options
 	if(clientid)
 		strcpy(broker->clientid, clientid);
 	else
 		strcpy(broker->clientid, "emqtt");
-	// Socket options
+	// Broker options
 	broker->port = port ? port : 1883;
 	strcpy(broker->hostname, hostname);
 }
 
 int mqtt_connect(mqtt_broker_handle_t *broker)
 {
-	if((broker->socket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-		return 0;
-
 	int clientidlen = strlen(broker->clientid);
-
-	// Create the stuff we need to connect
-	broker->socket_address.sin_family = AF_INET;
-	broker->socket_address.sin_port = htons(broker->port);
-	broker->socket_address.sin_addr.s_addr = inet_addr(broker->hostname);
-
-	// Connect
-	if((connect(broker->socket, (struct sockaddr *)&broker->socket_address, sizeof(broker->socket_address))) < 0)
-		return -1;
 
 	// Variable header
 	uint8_t var_header[] = {
@@ -91,10 +77,8 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), broker->clientid, clientidlen);
 
 	// Send the packet
-	if(send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet)) {
-		close(broker->socket);
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
 		return -1;
-	}
 
 	// Set connected flag
 	broker->connected = 1;
@@ -113,13 +97,11 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker)
 	};
 
 	// Send the packet
-	if(send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet))
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
 		return -1;
 
 	// Set connected flag
 	broker->connected = 0;
-	// Close the socket
-	close(broker->socket);
 
 	return 1;
 }
@@ -135,7 +117,7 @@ int mqtt_ping(mqtt_broker_handle_t *broker)
 	};
 
 	// Send the packet
-	if(send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet))
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
 		return -1;
 
 	return 1;
@@ -170,7 +152,7 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg, uin
 	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), msg, msglen);
 
 	// Send the packet
-	if(send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet))
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
 		return -1;
 
 	return 1;
@@ -205,7 +187,7 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), utf_topic, sizeof(utf_topic));
 
 	// Send the packet
-	if(send(broker->socket, packet, sizeof(packet), 0) < sizeof(packet))
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
 		return -1;
 
 	return 1;
