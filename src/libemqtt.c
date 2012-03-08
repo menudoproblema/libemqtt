@@ -60,7 +60,7 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 		0x00,0x06,0x4d,0x51,0x49,0x73,0x64,0x70, // Protocol name: MQIsdp
 		0x03, // Protocol version
 		0x02, // Connect flags (0x02 = clear session)
-		broker->alive>>4, broker->alive&0xF, // Keep alive
+		broker->alive>>8, broker->alive&0xFF, // Keep alive
 		0x00, clientidlen
 	};
 
@@ -132,10 +132,10 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *ms
 	uint16_t msglen = strlen(msg);
 
 	// Variable header
-	uint8_t var_header[topiclen+2];
+	uint8_t var_header[topiclen+2]; // Topic size (2 bytes), utf-encoded topic
 	memset(var_header, 0, sizeof(var_header));
-	var_header[0] = topiclen>>4;
-	var_header[1] = topiclen&0xF;
+	var_header[0] = topiclen>>8;
+	var_header[1] = topiclen&0xFF;
 	memcpy(var_header+2, topic, topiclen);
 
 	// Fixed header
@@ -170,10 +170,10 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 	uint8_t var_header[] = {0x00, 0x0a}; // Message ID
 
 	// utf topic
-	uint8_t utf_topic[topiclen+3];
+	uint8_t utf_topic[topiclen+3]; // Topic size (2 bytes), utf-encoded topic, QoS byte
 	memset(utf_topic, 0, sizeof(utf_topic));
-	utf_topic[0] = topiclen>>4;
-	utf_topic[1] = topiclen&0xF;
+	utf_topic[0] = topiclen>>8;
+	utf_topic[1] = topiclen&0xFF;
 	memcpy(utf_topic+2, topic, topiclen);
 
 	// Fixed header
@@ -206,10 +206,10 @@ int mqtt_unsubscribe(mqtt_broker_handle_t *broker, const char *topic)
 	uint8_t var_header[] = {0x00, 0x0a}; // Message ID
 
 	// utf topic
-	uint8_t utf_topic[topiclen+2];
+	uint8_t utf_topic[topiclen+2]; // Topic size (2 bytes), utf-encoded topic
 	memset(utf_topic, 0, sizeof(utf_topic));
-	utf_topic[0] = topiclen>>4;
-	utf_topic[1] = topiclen&0xF;
+	utf_topic[0] = topiclen>>8;
+	utf_topic[1] = topiclen&0xFF;
 	memcpy(utf_topic+2, topic, topiclen);
 
 	// Fixed header
