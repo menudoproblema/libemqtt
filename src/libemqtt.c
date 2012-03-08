@@ -134,7 +134,8 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *ms
 	// Variable header
 	uint8_t var_header[topiclen+2];
 	memset(var_header, 0, sizeof(var_header));
-	var_header[1] = topiclen;
+	var_header[0] = topiclen>>4;
+	var_header[1] = topiclen&0xF;
 	memcpy(var_header+2, topic, topiclen);
 
 	// Fixed header
@@ -171,7 +172,8 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 	// utf topic
 	uint8_t utf_topic[topiclen+3];
 	memset(utf_topic, 0, sizeof(utf_topic));
-	utf_topic[1] = topiclen;
+	utf_topic[0] = topiclen>>4;
+	utf_topic[1] = topiclen&0xF;
 	memcpy(utf_topic+2, topic, topiclen);
 
 	// Fixed header
@@ -206,7 +208,8 @@ int mqtt_unsubscribe(mqtt_broker_handle_t *broker, const char *topic)
 	// utf topic
 	uint8_t utf_topic[topiclen+2];
 	memset(utf_topic, 0, sizeof(utf_topic));
-	utf_topic[1] = topiclen;
+	utf_topic[0] = topiclen>>4;
+	utf_topic[1] = topiclen&0xF;
 	memcpy(utf_topic+2, topic, topiclen);
 
 	// Fixed header
