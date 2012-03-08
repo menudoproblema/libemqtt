@@ -81,7 +81,7 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 		return -1;
 
 	// Set connected flag
-	broker->connected = 1;
+	//broker->connected = 1;
 
 	return 1;
 }
@@ -123,7 +123,7 @@ int mqtt_ping(mqtt_broker_handle_t *broker)
 	return 1;
 }
 
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg, uint8_t retain)
+int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *msg, uint8_t retain)
 {
 	if(!broker->connected)
 		return 0;
@@ -175,8 +175,8 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 	};
 
 	// utf topic
-	uint8_t utf_topic[topiclen+2];
-	memset(utf_topic, 0, topiclen+2);
+	uint8_t utf_topic[topiclen+3];
+	memset(utf_topic, 0, topiclen+3);
 	utf_topic[1] = topiclen;
 	memcpy(utf_topic+2, topic, topiclen);
 

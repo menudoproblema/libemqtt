@@ -92,7 +92,7 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker);
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, char *msg, uint8_t retain);
+int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *msg, uint8_t retain);
 
 /**
  * @param broker
