@@ -1,0 +1,5 @@
+- Fix size (16 bits) on publish, subscribe and unsubscribe
+- Remove broker->connected flag on connect and disconnect
+- Remaining Length can be multibyte field
+- Username/Password
+- QoS

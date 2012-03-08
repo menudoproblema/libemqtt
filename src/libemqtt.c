@@ -81,7 +81,7 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 		return -1;
 
 	// Set connected flag
-	//broker->connected = 1;
+	broker->connected = 1;
 
 	return 1;
 }
@@ -128,12 +128,12 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *ms
 	if(!broker->connected)
 		return 0;
 
-	int topiclen = strlen(topic);
-	int msglen = strlen(msg);
+	uint16_t topiclen = strlen(topic);
+	uint16_t msglen = strlen(msg);
 
 	// Variable header
 	uint8_t var_header[topiclen+2];
-	memset(var_header, 0, topiclen+2);
+	memset(var_header, 0, sizeof(var_header));
 	var_header[1] = topiclen;
 	memcpy(var_header+2, topic, topiclen);
 
@@ -163,22 +163,57 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 	if(!broker->connected)
 		return 0;
 
-	int topiclen = strlen(topic);
+	uint16_t topiclen = strlen(topic);
 
 	// Variable header
 	uint8_t var_header[] = {0x00, 0x0a}; // Message ID
 
+	// utf topic
+	uint8_t utf_topic[topiclen+3];
+	memset(utf_topic, 0, sizeof(utf_topic));
+	utf_topic[1] = topiclen;
+	memcpy(utf_topic+2, topic, topiclen);
+
 	// Fixed header
 	uint8_t fixed_header[] = {
 		MQTT_MSG_SUBSCRIBE | MQTT_QOS1_FLAG, // Message Type, DUP flag, QoS level, Retain
-		sizeof(var_header)+topiclen+3
+		sizeof(var_header)+sizeof(utf_topic)
 	};
 
+	uint8_t packet[sizeof(var_header)+sizeof(fixed_header)+sizeof(utf_topic)];
+	memset(packet, 0, sizeof(packet));
+	memcpy(packet, fixed_header, sizeof(fixed_header));
+	memcpy(packet+sizeof(fixed_header), var_header, sizeof(var_header));
+	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), utf_topic, sizeof(utf_topic));
+
+	// Send the packet
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
+		return -1;
+
+	return 1;
+}
+
+int mqtt_unsubscribe(mqtt_broker_handle_t *broker, const char *topic)
+{
+	if(!broker->connected)
+		return 0;
+
+	uint16_t topiclen = strlen(topic);
+
+	// Variable header
+	uint8_t var_header[] = {0x00, 0x0a}; // Message ID
+
 	// utf topic
-	uint8_t utf_topic[topiclen+3];
-	memset(utf_topic, 0, topiclen+3);
+	uint8_t utf_topic[topiclen+2];
+	memset(utf_topic, 0, sizeof(utf_topic));
 	utf_topic[1] = topiclen;
 	memcpy(utf_topic+2, topic, topiclen);
+
+	// Fixed header
+	uint8_t fixed_header[] = {
+		MQTT_MSG_UNSUBSCRIBE | MQTT_QOS1_FLAG, // Message Type, DUP flag, QoS level, Retain
+		sizeof(var_header)+sizeof(utf_topic)
+	};
 
 	uint8_t packet[sizeof(var_header)+sizeof(fixed_header)+sizeof(utf_topic)];
 	memset(packet, 0, sizeof(packet));

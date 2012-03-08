@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);
 
-	mqtt_publish(&broker, "hello/emqtt", "It's me", 1);
+	mqtt_publish(&broker, "hello/emqtt", "It's me", 0);
 
 	mqtt_disconnect(&broker);
 	close_socket(&broker);

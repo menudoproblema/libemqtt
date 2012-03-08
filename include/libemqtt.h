@@ -111,5 +111,14 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic);
  **/
 int mqtt_ping(mqtt_broker_handle_t *broker);
 
+/**
+ * @param broker
+ * @param topic
+ *
+ * @return On success, 1 is returned. On connection error, 0 is returned.
+ * On IO error, -1 is returned.
+ **/
+int mqtt_unsubscribe(mqtt_broker_handle_t *broker, const char *topic);
+
 
 #endif // __LIBEMQTT_H__

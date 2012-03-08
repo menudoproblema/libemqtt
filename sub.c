@@ -84,6 +84,9 @@ int main() {
 		sleep(1);
 	}
 
+	result = mqtt_unsubscribe(&broker, "hello/emqtt");
+	printf("Unsubscribe: %d\n", result);
+
 	mqtt_disconnect(&broker);
 	close_socket(&broker);
 
