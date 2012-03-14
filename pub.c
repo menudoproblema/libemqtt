@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	int result;
 	mqtt_broker_handle_t broker;
 
-	mqtt_broker_init(&broker, "192.168.10.40", 1883, "libemqtt pub");
+	mqtt_init(&broker, "192.168.10.40", 1883, "libemqtt pub");
 	init_socket(&broker);
 
 	result = mqtt_connect(&broker);

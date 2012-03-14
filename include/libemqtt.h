@@ -48,11 +48,20 @@
 
 
 typedef struct {
-	void * socket_info;
+	void* socket_info;
 	int (*send)(void *socket_info, const void *buf, unsigned int count);
+	// Connection info
 	short port;
 	char hostname[128];
 	char clientid[24];
+	// Auth fields
+	char username[12]; // Recommended by MQTT Specification
+	char password[12]; // Recommended by MQTT Specification
+	// Will topic
+	uint8_t will_retain;
+	uint8_t will_qos;
+	uint8_t clean_session;
+	// Management fields
 	int connected;
 	uint16_t seq;
 	uint16_t alive;
@@ -66,7 +75,14 @@ typedef struct {
  * @param port
  * @param clientid
  **/
-void mqtt_broker_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid);
+void mqtt_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid);
+
+/**
+ * @param broker
+ * @param username
+ * @param password
+ **/
+void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const char* password);
 
 /**
  * @param broker

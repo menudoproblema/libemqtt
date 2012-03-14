@@ -32,10 +32,17 @@
 #define MQTT_QOS0_FLAG    0<<1
 #define MQTT_QOS1_FLAG    1<<1
 #define MQTT_QOS2_FLAG    2<<1
+
 #define MQTT_RETAIN_FLAG  1
 
+#define MQTT_CLEAN_SESSION  1<<1
+#define MQTT_WILL_FLAG      1<<2
+#define MQTT_WILL_RETAIN    1<<5
+#define MQTT_USERNAME_FLAG  1<<7
+#define MQTT_PASSWORD_FLAG  1<<6
 
-void mqtt_broker_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid)
+
+void mqtt_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid)
 {
 	// Connection options
 	broker->connected = 0;
@@ -43,17 +50,34 @@ void mqtt_broker_init(mqtt_broker_handle_t *broker, const char* hostname, short 
 	broker->seq = 0; // Sequency for message indetifiers
 	// Client options
 	if(clientid)
-		strcpy(broker->clientid, clientid);
+		strncpy(broker->clientid, clientid, sizeof(broker->clientid));
 	else
 		strcpy(broker->clientid, "emqtt");
+	memset(broker->username, 0, sizeof(broker->username));
+	memset(broker->password, 0, sizeof(broker->password));
 	// Broker options
 	broker->port = port ? port : 1883;
-	strcpy(broker->hostname, hostname);
+	strncpy(broker->hostname, hostname, sizeof(broker->hostname));
+}
+
+void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const char* password)
+{
+	strncpy(broker->username, username, sizeof(broker->username));
+	strncpy(broker->password, password, sizeof(broker->password));
 }
 
 int mqtt_connect(mqtt_broker_handle_t *broker)
 {
-	int clientidlen = strlen(broker->clientid);
+	uint16_t clientidlen = strlen(broker->clientid);
+	uint16_t payload_len = 0;
+
+	uint8_t clientid_payload[clientidlen+2];
+	memset(clientid_payload, 0, sizeof(clientid_payload));
+	clientid_payload[0] = clientidlen>>8;
+	clientid_payload[1] = clientidlen&0xFF;
+	memcpy(clientid_payload+2, broker->clientid, clientidlen);
+
+	payload_len += sizeof(clientid_payload);
 
 	// Variable header
 	uint8_t var_header[] = {
@@ -61,20 +85,23 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 		0x03, // Protocol version
 		0x02, // Connect flags (0x02 = clear session)
 		broker->alive>>8, broker->alive&0xFF, // Keep alive
-		0x00, clientidlen
 	};
 
 	// Fixed header
 	uint8_t fixed_header[] = {
 		MQTT_MSG_CONNECT, // Message Type, DUP flag, QoS level, Retain
-		sizeof(var_header)+strlen(broker->clientid) // Remaining length
+		sizeof(var_header)+payload_len // Remaining length
 	};
 
-	uint8_t packet[sizeof(fixed_header)+sizeof(var_header)+clientidlen];
+	uint16_t offset = 0;
+	uint8_t packet[sizeof(fixed_header)+sizeof(var_header)+payload_len];
 	memset(packet, 0, sizeof(packet));
 	memcpy(packet, fixed_header, sizeof(fixed_header));
-	memcpy(packet+sizeof(fixed_header), var_header, sizeof(var_header));
-	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), broker->clientid, clientidlen);
+	offset += sizeof(fixed_header);
+	memcpy(packet+offset, var_header, sizeof(var_header));
+	offset += sizeof(var_header);
+	memcpy(packet+offset, clientid_payload, sizeof(clientid_payload));
+	offset += sizeof(clientid_payload);
 
 	// Send the packet
 	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
