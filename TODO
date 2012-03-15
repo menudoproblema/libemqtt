@@ -1,4 +1,4 @@
 - Remove broker->connected flag on connect and disconnect
 - Remaining Length can be multibyte field
-- Username/Password
 - QoS
+	* Using seq for message ids
