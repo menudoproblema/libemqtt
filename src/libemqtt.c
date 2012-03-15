@@ -58,32 +58,46 @@ void mqtt_init(mqtt_broker_handle_t *broker, const char* hostname, short port, c
 	// Broker options
 	broker->port = port ? port : 1883;
 	strncpy(broker->hostname, hostname, sizeof(broker->hostname));
+	// Will topic
+	broker->clean_session = 1;
 }
 
 void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const char* password)
 {
-	strncpy(broker->username, username, sizeof(broker->username));
-	strncpy(broker->password, password, sizeof(broker->password));
+	if(username)
+		strncpy(broker->username, username, sizeof(broker->username)-1);
+	if(password)
+		strncpy(broker->password, password, sizeof(broker->password)-1);
 }
 
 int mqtt_connect(mqtt_broker_handle_t *broker)
 {
+	uint8_t flags = 0x00;
+
 	uint16_t clientidlen = strlen(broker->clientid);
-	uint16_t payload_len = 0;
+	uint16_t usernamelen = strlen(broker->username);
+	uint16_t passwordlen = strlen(broker->password);
+	uint16_t payload_len = clientidlen + 2;
 
-	uint8_t clientid_payload[clientidlen+2];
-	memset(clientid_payload, 0, sizeof(clientid_payload));
-	clientid_payload[0] = clientidlen>>8;
-	clientid_payload[1] = clientidlen&0xFF;
-	memcpy(clientid_payload+2, broker->clientid, clientidlen);
-
-	payload_len += sizeof(clientid_payload);
+	// Preparing the flags
+	if(usernamelen)
+	{
+		payload_len += usernamelen + 2;
+		flags |= MQTT_USERNAME_FLAG;
+	}
+	if(passwordlen)
+	{
+		payload_len += passwordlen + 2;
+		flags |= MQTT_PASSWORD_FLAG;
+	}
+	if(broker->clean_session)
+		flags |= MQTT_CLEAN_SESSION;
 
 	// Variable header
 	uint8_t var_header[] = {
 		0x00,0x06,0x4d,0x51,0x49,0x73,0x64,0x70, // Protocol name: MQIsdp
 		0x03, // Protocol version
-		0x02, // Connect flags (0x02 = clear session)
+		flags, // Connect flags
 		broker->alive>>8, broker->alive&0xFF, // Keep alive
 	};
 
@@ -100,8 +114,29 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 	offset += sizeof(fixed_header);
 	memcpy(packet+offset, var_header, sizeof(var_header));
 	offset += sizeof(var_header);
-	memcpy(packet+offset, clientid_payload, sizeof(clientid_payload));
-	offset += sizeof(clientid_payload);
+	// Client ID - UTF encoded
+	packet[offset++] = clientidlen>>8;
+	packet[offset++] = clientidlen&0xFF;
+	memcpy(packet+offset, broker->clientid, clientidlen);
+	offset += clientidlen;
+
+	if(usernamelen)
+	{
+		// Username - UTF encoded
+		packet[offset++] = usernamelen>>8;
+		packet[offset++] = usernamelen&0xFF;
+		memcpy(packet+offset, broker->username, usernamelen);
+		offset += usernamelen;
+	}
+
+	if(passwordlen)
+	{
+		// Password - UTF encoded
+		packet[offset++] = passwordlen>>8;
+		packet[offset++] = passwordlen&0xFF;
+		memcpy(packet+offset, broker->password, passwordlen);
+		offset += passwordlen;
+	}
 
 	// Send the packet
 	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))

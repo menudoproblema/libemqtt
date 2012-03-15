@@ -68,12 +68,13 @@ int main(int argc, char **argv) {
 	mqtt_broker_handle_t broker;
 
 	mqtt_init(&broker, "192.168.10.40", 1883, "libemqtt pub");
+	mqtt_init_auth(&broker, "username", NULL);
 	init_socket(&broker);
 
 	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);
 
-	mqtt_publish(&broker, "hello/emqtt", "It's me", 0);
+	mqtt_publish(&broker, "hello/emqtt", "It's me", 1);
 
 	mqtt_disconnect(&broker);
 	close_socket(&broker);

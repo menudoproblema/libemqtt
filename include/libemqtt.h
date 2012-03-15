@@ -30,6 +30,14 @@
 
 #include <stdint.h>
 
+#ifndef MQTT_CONF_USERNAME_LENGTH
+	#define MQTT_CONF_USERNAME_LENGTH 13 // Recommended by MQTT Specification (12 + '\0')
+#endif
+
+#ifndef MQTT_CONF_PASSWORD_LENGTH
+	#define MQTT_CONF_PASSWORD_LENGTH 13 // Recommended by MQTT Specification (12 + '\0')
+#endif
+
 
 #define MQTT_MSG_CONNECT       1<<4
 #define MQTT_MSG_CONNACK       2<<4
@@ -55,8 +63,8 @@ typedef struct {
 	char hostname[128];
 	char clientid[24];
 	// Auth fields
-	char username[12]; // Recommended by MQTT Specification
-	char password[12]; // Recommended by MQTT Specification
+	char username[MQTT_CONF_USERNAME_LENGTH];
+	char password[MQTT_CONF_PASSWORD_LENGTH];
 	// Will topic
 	uint8_t will_retain;
 	uint8_t will_qos;
