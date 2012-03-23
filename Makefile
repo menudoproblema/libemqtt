@@ -8,7 +8,14 @@ CCFLAGS=-I$(INC) -Wall -O
 LDFLAGS=-L$(LIB) -lemqtt
 AR=ar
 
-all: $(CLIENT)/pub $(CLIENT)/sub
+PYTHON_VER=2.7
+PYTHON_SRC=src/python
+PYTHON_CCFLAGS=-I$(INC) -I/usr/include/python$(PYTHON_VER) -Wall -O -fPIC
+PYTHON_LDFLAGS=-shared
+
+
+
+c: $(CLIENT)/pub $(CLIENT)/sub
 
 $(CLIENT)/pub: libemqtt.a pub.o
 	$(CC) pub.o -o $(CLIENT)/pub $(LDFLAGS)
@@ -22,14 +29,41 @@ $(CLIENT)/sub: libemqtt.a sub.o
 sub.o: $(CLIENT)/sub.c $(INC)/libemqtt.h
 	$(CC) $(CCFLAGS) -c $(CLIENT)/sub.c -o sub.o
 
+
+
+
+
+python: python-emqtt.o python-libemqtt.o
+	$(CC) $(PYTHON_LDFLAGS)  python-emqtt.o python-libemqtt.o -o emqtt.so
+
+python-emqtt.o: $(PYTHON_SRC)/emqtt.c $(INC)/libemqtt.h
+	$(CC) $(PYTHON_CCFLAGS) -c $(PYTHON_SRC)/emqtt.c -o python-emqtt.o
+
+python-libemqtt.o: $(SRC)/libemqtt.c $(INC)/libemqtt.h
+	$(CC) $(PYTHON_CCFLAGS) -c $(SRC)/libemqtt.c -o python-libemqtt.o
+
+
+
+
+
 libemqtt.a: libemqtt.o
 	$(AR) rcs libemqtt.a libemqtt.o
 
 libemqtt.o: $(SRC)/libemqtt.c $(INC)/libemqtt.h
 	$(CC) $(CCFLAGS) -c $(SRC)/libemqtt.c -o libemqtt.o
 
+
+
+
+
+all: c python
+
+
+
+
+
 clean:
-	rm -f libemqtt.o libemqtt.a pub.o sub.o
+	rm -f *.o libemqtt.a
 
 dist-clean: clean
-	rm -f $(CLIENT)/pub $(CLIENT)/sub
+	rm -f $(CLIENT)/pub $(CLIENT)/sub emqtt.so
