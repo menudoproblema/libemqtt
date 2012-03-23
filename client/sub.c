@@ -36,7 +36,7 @@ int send_packet(void *socket_info, const void *buf, unsigned int count)
 	return write(*((int *)socket_info), buf, count);
 }
 
-int init_socket(mqtt_broker_handle_t *broker)
+int init_socket(mqtt_broker_handle_t *broker, const char* hostname, short port)
 {
 	if((socket_id = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 		return -1;
@@ -44,8 +44,8 @@ int init_socket(mqtt_broker_handle_t *broker)
 	struct sockaddr_in socket_address;
 	// Create the stuff we need to connect
 	socket_address.sin_family = AF_INET;
-	socket_address.sin_port = htons(broker->port);
-	socket_address.sin_addr.s_addr = inet_addr(broker->hostname);
+	socket_address.sin_port = htons(port);
+	socket_address.sin_addr.s_addr = inet_addr(hostname);
 
 	// Connect
 	if((connect(socket_id, (struct sockaddr *)&socket_address, sizeof(socket_address))) < 0)
@@ -67,8 +67,8 @@ int main() {
 	mqtt_broker_handle_t broker;
 	int result, count = 0;
 
-	mqtt_init(&broker, "192.168.10.40", 1883, "libemqtt sub");
-	init_socket(&broker);
+	mqtt_init(&broker, "libemqtt sub");
+	init_socket(&broker, "192.168.10.40", 1883);
 
 	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);

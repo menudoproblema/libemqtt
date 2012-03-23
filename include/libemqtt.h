@@ -59,8 +59,6 @@ typedef struct {
 	void* socket_info;
 	int (*send)(void *socket_info, const void *buf, unsigned int count);
 	// Connection info
-	short port;
-	char hostname[128];
 	char clientid[24];
 	// Auth fields
 	char username[MQTT_CONF_USERNAME_LENGTH];
@@ -83,7 +81,7 @@ typedef struct {
  * @param port
  * @param clientid
  **/
-void mqtt_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid);
+void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid);
 
 /**
  * @param broker

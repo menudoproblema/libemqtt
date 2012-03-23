@@ -42,7 +42,7 @@
 #define MQTT_PASSWORD_FLAG  1<<6
 
 
-void mqtt_init(mqtt_broker_handle_t *broker, const char* hostname, short port, const char* clientid)
+void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid)
 {
 	// Connection options
 	broker->connected = 0;
@@ -55,9 +55,6 @@ void mqtt_init(mqtt_broker_handle_t *broker, const char* hostname, short port, c
 		strcpy(broker->clientid, "emqtt");
 	memset(broker->username, 0, sizeof(broker->username));
 	memset(broker->password, 0, sizeof(broker->password));
-	// Broker options
-	broker->port = port ? port : 1883;
-	strncpy(broker->hostname, hostname, sizeof(broker->hostname));
 	// Will topic
 	broker->clean_session = 1;
 }
