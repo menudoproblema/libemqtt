@@ -61,9 +61,9 @@ void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid)
 
 void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const char* password)
 {
-	if(username)
+	if(username && username[0] != '\0')
 		strncpy(broker->username, username, sizeof(broker->username)-1);
-	if(password)
+	if(password && password[0] != '\0')
 		strncpy(broker->password, password, sizeof(broker->password)-1);
 }
 
