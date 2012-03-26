@@ -68,7 +68,6 @@ typedef struct {
 	uint8_t will_qos;
 	uint8_t clean_session;
 	// Management fields
-	int connected;
 	uint16_t seq;
 	uint16_t alive;
 } mqtt_broker_handle_t;
@@ -77,8 +76,6 @@ typedef struct {
 
 /**
  * @param broker
- * @param hostname
- * @param port
  * @param clientid
  **/
 void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid);

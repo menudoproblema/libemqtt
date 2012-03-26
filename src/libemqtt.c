@@ -45,7 +45,6 @@
 void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid)
 {
 	// Connection options
-	broker->connected = 0;
 	broker->alive = 300; // 300 seconds = 5 minutes
 	broker->seq = 0; // Sequency for message indetifiers
 	// Client options
@@ -139,17 +138,11 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
 		return -1;
 
-	// Set connected flag
-	broker->connected = 1;
-
 	return 1;
 }
 
 int mqtt_disconnect(mqtt_broker_handle_t *broker)
 {
-	if(!broker->connected)
-		return 0;
-
 	uint8_t packet[] = {
 		MQTT_MSG_DISCONNECT, // Message Type, DUP flag, QoS level, Retain
 		0x00 // Remaining length
@@ -159,17 +152,11 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker)
 	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
 		return -1;
 
-	// Set connected flag
-	broker->connected = 0;
-
 	return 1;
 }
 
 int mqtt_ping(mqtt_broker_handle_t *broker)
 {
-	if(!broker->connected)
-		return 0;
-
 	uint8_t packet[] = {
 		MQTT_MSG_PINGREQ, // Message Type, DUP flag, QoS level, Retain
 		0x00 // Remaining length
@@ -184,9 +171,6 @@ int mqtt_ping(mqtt_broker_handle_t *broker)
 
 int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *msg, uint8_t retain)
 {
-	if(!broker->connected)
-		return 0;
-
 	uint16_t topiclen = strlen(topic);
 	uint16_t msglen = strlen(msg);
 
@@ -220,9 +204,6 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *ms
 
 int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 {
-	if(!broker->connected)
-		return 0;
-
 	uint16_t topiclen = strlen(topic);
 
 	// Variable header
@@ -256,9 +237,6 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 
 int mqtt_unsubscribe(mqtt_broker_handle_t *broker, const char *topic)
 {
-	if(!broker->connected)
-		return 0;
-
 	uint16_t topiclen = strlen(topic);
 
 	// Variable header

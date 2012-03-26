@@ -1,6 +1,5 @@
 C Library:
 ==========
-- Remove broker->connected flag on connect and disconnect
 - Remaining Length can be multibyte field
 - QoS
 	* Using seq for message ids
