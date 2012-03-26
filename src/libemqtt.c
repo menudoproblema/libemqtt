@@ -48,12 +48,13 @@ void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid)
 	broker->alive = 300; // 300 seconds = 5 minutes
 	broker->seq = 0; // Sequency for message indetifiers
 	// Client options
+	memset(broker->clientid, 0, sizeof(broker->clientid));
+	memset(broker->username, 0, sizeof(broker->username));
+	memset(broker->password, 0, sizeof(broker->password));
 	if(clientid)
 		strncpy(broker->clientid, clientid, sizeof(broker->clientid));
 	else
 		strcpy(broker->clientid, "emqtt");
-	memset(broker->username, 0, sizeof(broker->username));
-	memset(broker->password, 0, sizeof(broker->password));
 	// Will topic
 	broker->clean_session = 1;
 }
