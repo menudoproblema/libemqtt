@@ -33,6 +33,7 @@ typedef struct {
 #include <stdio.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+int socket_id;
 int send_packet(void *socket_info, const void *buf, unsigned int count) // TODO: Subir a un socket Python
 {
 	return write(*((int *)socket_info), buf, count);
@@ -54,14 +55,24 @@ Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 	//memset(username, 0, sizeof(username));
 	//memset(password, 0, sizeof(password));
 
-	int parse = PyArg_ParseTupleAndKeywords(args, kwargs, "sss", kwlist, &clientid, &username, &password);
+	int parse = PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", kwlist, &clientid, &username, &password);
 	printf("Parse:%d\n", parse);
 	printf("-- init=clientid:%s, username:%s, password:%s\n", clientid, username, password);
 
 	mqtt_init(&self->broker, clientid);
 	mqtt_init_auth(&self->broker, username, password);
+}
 
-	int socket_id = socket(PF_INET, SOCK_STREAM, 0);
+static void
+Mqtt_dealloc(MqttBroker *self)
+{
+	self->ob_type->tp_free((PyObject*)self);
+}
+
+static PyObject *
+Mqtt_connect(MqttBroker *self, PyObject *args, PyObject *kwargs)
+{
+	socket_id = socket(PF_INET, SOCK_STREAM, 0);
 
 	struct sockaddr_in socket_address;
 	// Create the stuff we need to connect
@@ -74,28 +85,24 @@ Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 
 	self->broker.socket_info = (void *)&socket_id;
 	self->broker.send = send_packet;
-}
 
-static void
-Mqtt_dealloc(MqttBroker *self)
-{
-	self->ob_type->tp_free((PyObject*)self);
-}
-
-static PyObject *
-Mqtt_connect(MqttBroker *self, PyObject *args, PyObject *kwargs)
-{
 	return Py_BuildValue("i", mqtt_connect(&self->broker));
 }
 
+static PyObject *
+Mqtt_disconnect(MqttBroker *self, PyObject *args, PyObject *kwargs)
+{
+	close(*(int *)&self->broker.socket_info);
+	return Py_BuildValue("i", mqtt_disconnect(&self->broker));
+}
+
 static PyMemberDef Mqtt_members[] = {
-	{ "_broker", T_OBJECT, offsetof(MqttBroker, broker), 0, "Private broker info." },
 	{ NULL }
 };
 
 static PyMethodDef Mqtt_methods[] = {
-	{ "connect", (PyCFunction) Mqtt_connect, METH_VARARGS|METH_KEYWORDS, "MQTT connect." },
-	// typically there would be more here...
+	{ "connect", (PyCFunction) Mqtt_connect, 0, "MQTT connect." },
+	{ "disconnect", (PyCFunction) Mqtt_disconnect, 0, "MQTT disconnect." },
 
 	{ NULL }
 };
