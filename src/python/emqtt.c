@@ -28,33 +28,52 @@ typedef struct {
 	mqtt_broker_handle_t broker;
 } MqttBroker;
 
+
+
+#include <stdio.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+int send_packet(void *socket_info, const void *buf, unsigned int count) // TODO: Subir a un socket Python
+{
+	return write(*((int *)socket_info), buf, count);
+}
+
+
+
 static void
 Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 {
 	static char *kwlist[] = {"clientid", "username", "password", NULL};
 
-	char clientid[24];
-	char username[MQTT_CONF_USERNAME_LENGTH];
-	char password[MQTT_CONF_PASSWORD_LENGTH];
+	char *clientid = "python-emqtt";
+	char *username = NULL;
+	char *password = NULL;
+	printf("-- INIT --\n");
 
-	memset(clientid, 0, sizeof(clientid));
-	memset(username, 0, sizeof(username));
-	memset(password, 0, sizeof(password));
+	//memset(clientid, 0, sizeof(clientid));
+	//memset(username, 0, sizeof(username));
+	//memset(password, 0, sizeof(password));
 
-	if (PyArg_ParseTupleAndKeywords(args, kwargs, "sss", kwlist,
-			&clientid, &username, &password))
-	{
-		printf("-- init=clientid:%s, username:%s, password:%s\n",  clientid, username, password);
+	int parse = PyArg_ParseTupleAndKeywords(args, kwargs, "sss", kwlist, &clientid, &username, &password);
+	printf("Parse:%d\n", parse);
+	printf("-- init=clientid:%s, username:%s, password:%s\n", clientid, username, password);
 
-		mqtt_init(&self->broker, clientid);
-		mqtt_init_auth(&self->broker, username, password);
-	}
-	else
-	{
-		printf("-- default values\n");
+	mqtt_init(&self->broker, clientid);
+	mqtt_init_auth(&self->broker, username, password);
 
-		mqtt_init(&self->broker, "python-emqtt");
-	}
+	int socket_id = socket(PF_INET, SOCK_STREAM, 0);
+
+	struct sockaddr_in socket_address;
+	// Create the stuff we need to connect
+	socket_address.sin_family = AF_INET;
+	socket_address.sin_port = htons(1883);
+	socket_address.sin_addr.s_addr = inet_addr("192.168.10.40");
+
+	// Connect
+	connect(socket_id, (struct sockaddr *)&socket_address, sizeof(socket_address));
+
+	self->broker.socket_info = (void *)&socket_id;
+	self->broker.send = send_packet;
 }
 
 static void
