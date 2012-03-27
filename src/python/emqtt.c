@@ -25,17 +25,18 @@
 
 typedef struct {
 	PyObject_HEAD
+	PyObject *socket;
 	mqtt_broker_handle_t broker;
 } MqttBroker;
 
 
 
-#include <stdio.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-int socket_id;
-int send_packet(void *socket_info, const void *buf, unsigned int count) // TODO: Subir a un socket Python
+int send_packet(void *socket_info, const void *buf, unsigned int count)
 {
+	MqttBroker *self = (MqttBroker *)socket_info;
+	PyObject *packet = PyString_FromStringAndSize(buf, count);
+
+	Py_DECREF(packet);
 	return write(*((int *)socket_info), buf, count);
 }
 
@@ -44,56 +45,39 @@ int send_packet(void *socket_info, const void *buf, unsigned int count) // TODO:
 static void
 Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 {
-	static char *kwlist[] = {"clientid", "username", "password", NULL};
+	static char *kwlist[] = {"socket", "clientid", "username", "password", NULL};
 
 	char *clientid = "python-emqtt";
 	char *username = NULL;
 	char *password = NULL;
-	printf("-- INIT --\n");
 
-	//memset(clientid, 0, sizeof(clientid));
-	//memset(username, 0, sizeof(username));
-	//memset(password, 0, sizeof(password));
-
-	int parse = PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", kwlist, &clientid, &username, &password);
-	printf("Parse:%d\n", parse);
-	printf("-- init=clientid:%s, username:%s, password:%s\n", clientid, username, password);
+	int parse = PyArg_ParseTupleAndKeywords(args, kwargs, "O|sss", kwlist, &self->socket, &clientid, &username, &password);
+	// TODO: Exception if no parse
 
 	mqtt_init(&self->broker, clientid);
 	mqtt_init_auth(&self->broker, username, password);
+
+	self->broker.socket_info = (void *)self;
+	self->broker.send = send_packet;
+}
+
+static PyObject *
+Mqtt_connect(MqttBroker *self)
+{
+	return Py_BuildValue("i", mqtt_connect(&self->broker));
+}
+
+static PyObject *
+Mqtt_disconnect(MqttBroker *self)
+{
+	return Py_BuildValue("i", mqtt_disconnect(&self->broker));
 }
 
 static void
 Mqtt_dealloc(MqttBroker *self)
 {
+	Mqtt_disconnect(self);
 	self->ob_type->tp_free((PyObject*)self);
-}
-
-static PyObject *
-Mqtt_connect(MqttBroker *self, PyObject *args, PyObject *kwargs)
-{
-	socket_id = socket(PF_INET, SOCK_STREAM, 0);
-
-	struct sockaddr_in socket_address;
-	// Create the stuff we need to connect
-	socket_address.sin_family = AF_INET;
-	socket_address.sin_port = htons(1883);
-	socket_address.sin_addr.s_addr = inet_addr("192.168.10.40");
-
-	// Connect
-	connect(socket_id, (struct sockaddr *)&socket_address, sizeof(socket_address));
-
-	self->broker.socket_info = (void *)&socket_id;
-	self->broker.send = send_packet;
-
-	return Py_BuildValue("i", mqtt_connect(&self->broker));
-}
-
-static PyObject *
-Mqtt_disconnect(MqttBroker *self, PyObject *args, PyObject *kwargs)
-{
-	close(*(int *)&self->broker.socket_info);
-	return Py_BuildValue("i", mqtt_disconnect(&self->broker));
 }
 
 static PyMemberDef Mqtt_members[] = {
@@ -101,8 +85,8 @@ static PyMemberDef Mqtt_members[] = {
 };
 
 static PyMethodDef Mqtt_methods[] = {
-	{ "connect", (PyCFunction) Mqtt_connect, 0, "MQTT connect." },
-	{ "disconnect", (PyCFunction) Mqtt_disconnect, 0, "MQTT disconnect." },
+	{ "connect", (PyCFunction) Mqtt_connect, METH_NOARGS, "MQTT connect." },
+	{ "disconnect", (PyCFunction) Mqtt_disconnect, METH_NOARGS, "MQTT disconnect." },
 
 	{ NULL }
 };
