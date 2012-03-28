@@ -151,7 +151,7 @@ static PyModuleDef moduledef = {
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
-initemqtt(void)
+initclient(void)
 {
     PyObject* m;
 
@@ -159,8 +159,7 @@ initemqtt(void)
     if (PyType_Ready(&MqttType) < 0)
         return;
 
-    m = Py_InitModule3("emqtt", Mqtt_methods,
-                       "eMQTT.");
+    m = Py_InitModule3("emqtt.client", Mqtt_methods, "Embedded MQTT client.");
 
     Py_INCREF(&MqttType);
     PyModule_AddObject(m, "Mqtt", (PyObject *)&MqttType);
