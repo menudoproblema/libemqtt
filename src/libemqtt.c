@@ -42,7 +42,7 @@
 #define MQTT_PASSWORD_FLAG  1<<6
 
 
-void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid)
+void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid)
 {
 	// Connection options
 	broker->alive = 300; // 300 seconds = 5 minutes
@@ -59,7 +59,7 @@ void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid)
 	broker->clean_session = 1;
 }
 
-void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const char* password)
+void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const char* password)
 {
 	if(username && username[0] != '\0')
 		strncpy(broker->username, username, sizeof(broker->username)-1);
@@ -67,7 +67,7 @@ void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const ch
 		strncpy(broker->password, password, sizeof(broker->password)-1);
 }
 
-int mqtt_connect(mqtt_broker_handle_t *broker)
+int mqtt_connect(mqtt_broker_handle_t* broker)
 {
 	uint8_t flags = 0x00;
 
@@ -142,7 +142,7 @@ int mqtt_connect(mqtt_broker_handle_t *broker)
 	return 1;
 }
 
-int mqtt_disconnect(mqtt_broker_handle_t *broker)
+int mqtt_disconnect(mqtt_broker_handle_t* broker)
 {
 	uint8_t packet[] = {
 		MQTT_MSG_DISCONNECT, // Message Type, DUP flag, QoS level, Retain
@@ -156,7 +156,7 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker)
 	return 1;
 }
 
-int mqtt_ping(mqtt_broker_handle_t *broker)
+int mqtt_ping(mqtt_broker_handle_t* broker)
 {
 	uint8_t packet[] = {
 		MQTT_MSG_PINGREQ, // Message Type, DUP flag, QoS level, Retain
@@ -170,7 +170,7 @@ int mqtt_ping(mqtt_broker_handle_t *broker)
 	return 1;
 }
 
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *msg, uint8_t retain)
+int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain)
 {
 	uint16_t topiclen = strlen(topic);
 	uint16_t msglen = strlen(msg);
@@ -203,7 +203,7 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *ms
 	return 1;
 }
 
-int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
+int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic)
 {
 	uint16_t topiclen = strlen(topic);
 
@@ -236,7 +236,7 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic)
 	return 1;
 }
 
-int mqtt_unsubscribe(mqtt_broker_handle_t *broker, const char *topic)
+int mqtt_unsubscribe(mqtt_broker_handle_t* broker, const char* topic)
 {
 	uint16_t topiclen = strlen(topic);
 

@@ -57,7 +57,7 @@
 
 typedef struct {
 	void* socket_info;
-	int (*send)(void *socket_info, const void *buf, unsigned int count);
+	int (*send)(void* socket_info, const void* buf, unsigned int count);
 	// Connection info
 	char clientid[24];
 	// Auth fields
@@ -78,14 +78,14 @@ typedef struct {
  * @param broker
  * @param clientid
  **/
-void mqtt_init(mqtt_broker_handle_t *broker, const char* clientid);
+void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid);
 
 /**
  * @param broker
  * @param username
  * @param password
  **/
-void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const char* password);
+void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const char* password);
 
 /**
  * @param broker
@@ -93,7 +93,7 @@ void mqtt_init_auth(mqtt_broker_handle_t *broker, const char* username, const ch
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_connect(mqtt_broker_handle_t *broker);
+int mqtt_connect(mqtt_broker_handle_t* broker);
 
 /**
  * @param broker
@@ -101,7 +101,7 @@ int mqtt_connect(mqtt_broker_handle_t *broker);
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_disconnect(mqtt_broker_handle_t *broker);
+int mqtt_disconnect(mqtt_broker_handle_t* broker);
 
 /**
  * @param broker
@@ -111,7 +111,7 @@ int mqtt_disconnect(mqtt_broker_handle_t *broker);
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *msg, uint8_t retain);
+int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain);
 
 /**
  * @param broker
@@ -120,7 +120,7 @@ int mqtt_publish(mqtt_broker_handle_t *broker, const char *topic, const char *ms
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic);
+int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic);
 
 /**
  * @param broker
@@ -128,7 +128,7 @@ int mqtt_subscribe(mqtt_broker_handle_t *broker, const char *topic);
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_ping(mqtt_broker_handle_t *broker);
+int mqtt_ping(mqtt_broker_handle_t* broker);
 
 /**
  * @param broker
@@ -137,7 +137,7 @@ int mqtt_ping(mqtt_broker_handle_t *broker);
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_unsubscribe(mqtt_broker_handle_t *broker, const char *topic);
+int mqtt_unsubscribe(mqtt_broker_handle_t* broker, const char* topic);
 
 
 #endif // __LIBEMQTT_H__

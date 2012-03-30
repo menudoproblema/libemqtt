@@ -31,12 +31,12 @@
 
 int socket_id;
 
-int send_packet(void *socket_info, const void *buf, unsigned int count)
+int send_packet(void* socket_info, const void* buf, unsigned int count)
 {
-	return write(*((int *)socket_info), buf, count);
+	return write(*((int*)socket_info), buf, count);
 }
 
-int init_socket(mqtt_broker_handle_t *broker, const char* hostname, short port)
+int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port)
 {
 	if((socket_id = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 		return -1;
@@ -48,22 +48,22 @@ int init_socket(mqtt_broker_handle_t *broker, const char* hostname, short port)
 	socket_address.sin_addr.s_addr = inet_addr(hostname);
 
 	// Connect
-	if((connect(socket_id, (struct sockaddr *)&socket_address, sizeof(socket_address))) < 0)
+	if((connect(socket_id, (struct sockaddr*)&socket_address, sizeof(socket_address))) < 0)
 		return -1;
 
-	broker->socket_info = (void *)&socket_id;
+	broker->socket_info = (void* )&socket_id;
 	broker->send = send_packet;
 
 	return 0;
 }
 
-int close_socket(mqtt_broker_handle_t *broker)
+int close_socket(mqtt_broker_handle_t* broker)
 {
-	return close(*(int *)broker->socket_info);
+	return close(*(int*)broker->socket_info);
 }
 
 
-int main(int argc, char **argv) {
+int main(int argc, char* *argv) {
 	int result;
 	mqtt_broker_handle_t broker;
 
