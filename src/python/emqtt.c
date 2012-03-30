@@ -92,6 +92,34 @@ PyObject *Mqtt_disconnect(MqttBroker *self)
 	return Py_BuildValue("");
 }
 
+PyObject *Mqtt_publish(MqttBroker *self, PyObject *args, PyObject *kwargs)
+{
+	if(self->connected <= 0) // Not connected
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	static char *kwlist[] = {"topic", "message", "retain", NULL};
+
+	char *topic = "python-emqtt";
+	char *message = NULL;
+	PyObject *retain = Py_False;
+
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "ss|O", kwlist, &topic, &message, &retain))
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	if(!PyBool_Check(retain))
+	{
+		// TODO: Exception
+	}
+
+	return Py_BuildValue("i", mqtt_publish(&self->broker, topic, message, PyInt_AsLong(retain)));
+}
+
 void Mqtt_dealloc(MqttBroker *self)
 {
 	if(self->connected > 0)
@@ -108,6 +136,7 @@ static PyMemberDef Mqtt_members[] = {
 static PyMethodDef Mqtt_methods[] = {
 	{ "connect", (PyCFunction) Mqtt_connect, METH_NOARGS, "MQTT connect." },
 	{ "disconnect", (PyCFunction) Mqtt_disconnect, METH_NOARGS, "MQTT disconnect." },
+	{ "publish", (PyCFunction) Mqtt_publish, METH_KEYWORDS, "MQTT publish." },
 
 	{ NULL }
 };
