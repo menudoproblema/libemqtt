@@ -102,7 +102,7 @@ PyObject* Mqtt_publish(MqttBroker* self, PyObject* args, PyObject* kwargs)
 
 	static char* kwlist[] = {"topic", "message", "retain", NULL};
 
-	char* topic = "python-emqtt";
+	char* topic = NULL;
 	char* message = NULL;
 	PyObject* retain = Py_False;
 
