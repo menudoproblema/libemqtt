@@ -26,7 +26,7 @@
 typedef struct {
 	PyObject_HEAD
 	PyObject *socket;
-	short connected = 0;
+	short connected; // < 1 means not connected
 	mqtt_broker_handle_t broker;
 } MqttBroker;
 
@@ -44,7 +44,7 @@ int send_packet(void *socket_info, const void *buf, unsigned int count)
 
 
 
-static PyObject *Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
+PyObject *Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 {
 	static char *kwlist[] = {"socket", "clientid", "username", "password", NULL};
 
@@ -64,22 +64,40 @@ static PyObject *Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 	self->broker.socket_info = (void *)self;
 	self->broker.send = send_packet;
 
+	self->connected = 0;
+
 	return Py_BuildValue("");
 }
 
-static PyObject *Mqtt_connect(MqttBroker *self)
+PyObject *Mqtt_connect(MqttBroker *self)
 {
-	return Py_BuildValue("i", mqtt_connect(&self->broker));
+	printf("Connect\n");
+	if(self->connected <= 0) // Prevent reconnect
+	{
+		self->connected = mqtt_connect(&self->broker);
+		return Py_BuildValue("i", self->connected);
+	}
+	return Py_BuildValue("");
 }
 
-static PyObject *Mqtt_disconnect(MqttBroker *self)
+PyObject *Mqtt_disconnect(MqttBroker *self)
 {
-	return Py_BuildValue("i", mqtt_disconnect(&self->broker));
+	printf("Disconnect\n");
+	if(self->connected > 0)
+	{
+		int result = mqtt_disconnect(&self->broker);
+		self->connected = 0;
+		return Py_BuildValue("i", result);
+	}
+	return Py_BuildValue("");
 }
 
-static void Mqtt_dealloc(MqttBroker *self)
+void Mqtt_dealloc(MqttBroker *self)
 {
-	Mqtt_disconnect(self);
+	if(self->connected > 0)
+	{
+		Mqtt_disconnect(self);
+	}
 	self->ob_type->tp_free((PyObject*)self);
 }
 
