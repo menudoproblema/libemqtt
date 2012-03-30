@@ -26,6 +26,7 @@
 typedef struct {
 	PyObject_HEAD
 	PyObject *socket;
+	short connected = 0;
 	mqtt_broker_handle_t broker;
 } MqttBroker;
 
@@ -35,15 +36,15 @@ int send_packet(void *socket_info, const void *buf, unsigned int count)
 {
 	MqttBroker *self = (MqttBroker *)socket_info;
 	PyObject *packet = PyString_FromStringAndSize(buf, count);
-
+	PyObject *result = PyObject_CallMethod(self->socket, "send", "S", packet);
+	int bytes = PyInt_AsLong(result);
 	Py_DECREF(packet);
-	return write(*((int *)socket_info), buf, count);
+	return bytes;
 }
 
 
 
-static void
-Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
+static PyObject *Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 {
 	static char *kwlist[] = {"socket", "clientid", "username", "password", NULL};
 
@@ -51,30 +52,32 @@ Mqtt_init(MqttBroker *self, PyObject *args, PyObject *kwargs)
 	char *username = NULL;
 	char *password = NULL;
 
-	int parse = PyArg_ParseTupleAndKeywords(args, kwargs, "O|sss", kwlist, &self->socket, &clientid, &username, &password);
-	// TODO: Exception if no parse
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "O|sss", kwlist, &self->socket, &clientid, &username, &password))
+	{
+		// TODO: Exception
+		return NULL;
+	}
 
 	mqtt_init(&self->broker, clientid);
 	mqtt_init_auth(&self->broker, username, password);
 
 	self->broker.socket_info = (void *)self;
 	self->broker.send = send_packet;
+
+	return Py_BuildValue("");
 }
 
-static PyObject *
-Mqtt_connect(MqttBroker *self)
+static PyObject *Mqtt_connect(MqttBroker *self)
 {
 	return Py_BuildValue("i", mqtt_connect(&self->broker));
 }
 
-static PyObject *
-Mqtt_disconnect(MqttBroker *self)
+static PyObject *Mqtt_disconnect(MqttBroker *self)
 {
 	return Py_BuildValue("i", mqtt_disconnect(&self->broker));
 }
 
-static void
-Mqtt_dealloc(MqttBroker *self)
+static void Mqtt_dealloc(MqttBroker *self)
 {
 	Mqtt_disconnect(self);
 	self->ob_type->tp_free((PyObject*)self);
@@ -150,8 +153,7 @@ static PyModuleDef moduledef = {
 #ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
 #endif
-PyMODINIT_FUNC
-initclient(void)
+PyMODINIT_FUNC initclient(void)
 {
     PyObject* m;
 
