@@ -27,19 +27,25 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <linux/tcp.h>
 
 
 int socket_id;
 
 int send_packet(void* socket_info, const void* buf, unsigned int count)
 {
-	return write(*((int*)socket_info), buf, count);
+	return write(*((int*)socket_info), (uint8_t*)buf, count);
 }
 
 int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port)
 {
 	if((socket_id = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 		return -1;
+
+	// Prevent buffering
+	int flag = 1;
+	if (setsockopt(socket_id, IPPROTO_TCP, TCP_NODELAY, (char*) &flag, sizeof(flag)) < 0)
+		return -2;
 
 	struct sockaddr_in socket_address;
 	// Create the stuff we need to connect

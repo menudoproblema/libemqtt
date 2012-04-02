@@ -41,6 +41,11 @@ int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port)
 	if((socket_id = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 		return -1;
 
+	// Prevent buffering
+	int flag = 1;
+	if (setsockopt(socket_id, IPPROTO_TCP, TCP_NODELAY, (char*) &flag, sizeof(flag)) < 0)
+		return -2;
+
 	struct sockaddr_in socket_address;
 	// Create the stuff we need to connect
 	socket_address.sin_family = AF_INET;
@@ -51,7 +56,7 @@ int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port)
 	if((connect(socket_id, (struct sockaddr*)&socket_address, sizeof(socket_address))) < 0)
 		return -1;
 
-	broker->socket_info = (void* )&socket_id;
+	broker->socket_info = (void*)&socket_id;
 	broker->send = send_packet;
 
 	return 0;
@@ -63,7 +68,7 @@ int close_socket(mqtt_broker_handle_t* broker)
 }
 
 
-int main(int argc, char* *argv) {
+int main(int argc, char* argv[]) {
 	int result;
 	mqtt_broker_handle_t broker;
 
@@ -74,7 +79,7 @@ int main(int argc, char* *argv) {
 	result = mqtt_connect(&broker);
 	printf("Connect: %d\n", result);
 
-	mqtt_publish(&broker, "hello/emqtt", "It's me", 1);
+	mqtt_publish(&broker, "hello/emqtt", "It's me", 0);
 
 	mqtt_disconnect(&broker);
 	close_socket(&broker);
