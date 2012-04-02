@@ -61,7 +61,7 @@ PyObject* Mqtt_init(MqttBroker* self, PyObject* args, PyObject* kwargs)
 	mqtt_init(&self->broker, clientid);
 	mqtt_init_auth(&self->broker, username, password);
 
-	self->broker.socket_info = (void* )self;
+	self->broker.socket_info = (void*)self;
 	self->broker.send = send_packet;
 
 	self->connected = 0;
@@ -71,7 +71,6 @@ PyObject* Mqtt_init(MqttBroker* self, PyObject* args, PyObject* kwargs)
 
 PyObject* Mqtt_connect(MqttBroker* self)
 {
-	printf("Connect\n");
 	if(self->connected <= 0) // Prevent reconnect
 	{
 		self->connected = mqtt_connect(&self->broker);
@@ -82,7 +81,6 @@ PyObject* Mqtt_connect(MqttBroker* self)
 
 PyObject* Mqtt_disconnect(MqttBroker* self)
 {
-	printf("Disconnect\n");
 	if(self->connected > 0)
 	{
 		int result = mqtt_disconnect(&self->broker);
@@ -120,6 +118,27 @@ PyObject* Mqtt_publish(MqttBroker* self, PyObject* args, PyObject* kwargs)
 	return Py_BuildValue("i", mqtt_publish(&self->broker, topic, message, PyInt_AsLong(retain)));
 }
 
+PyObject* Mqtt_subscribe(MqttBroker* self, PyObject* args, PyObject* kwargs)
+{
+	if(self->connected <= 0) // Not connected
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	static char* kwlist[] = {"topic", NULL};
+
+	char* topic = NULL;
+
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &topic))
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	return Py_BuildValue("i", mqtt_subscribe(&self->broker, topic));
+}
+
 void Mqtt_dealloc(MqttBroker* self)
 {
 	if(self->connected > 0)
@@ -137,6 +156,7 @@ static PyMethodDef Mqtt_methods[] = {
 	{ "connect", (PyCFunction) Mqtt_connect, METH_NOARGS, "MQTT connect." },
 	{ "disconnect", (PyCFunction) Mqtt_disconnect, METH_NOARGS, "MQTT disconnect." },
 	{ "publish", (PyCFunction) Mqtt_publish, METH_KEYWORDS, "MQTT publish." },
+	{ "subscribe", (PyCFunction) Mqtt_subscribe, METH_KEYWORDS, "MQTT subscribe." },
 
 	{ NULL }
 };
