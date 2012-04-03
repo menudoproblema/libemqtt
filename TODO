@@ -3,9 +3,8 @@ C Library:
 - Remaining Length can be multibyte field
 - Subscribe
 	-> QoS for topic
-- QoS
-	* Using seq for message ids
 - Will
+- Use of DUP flag
 
 Python binding:
 ===============
