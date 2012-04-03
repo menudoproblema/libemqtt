@@ -67,6 +67,11 @@ void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const ch
 		strncpy(broker->password, password, sizeof(broker->password)-1);
 }
 
+void mqtt_set_alive(mqtt_broker_handle_t* broker, uint16_t alive)
+{
+	broker->alive = alive;
+}
+
 int mqtt_connect(mqtt_broker_handle_t* broker)
 {
 	uint8_t flags = 0x00;

@@ -77,6 +77,8 @@ typedef struct {
 /**
  * @param broker
  * @param clientid
+ *
+ * Note: Only has effect before to call mqtt_connect
  **/
 void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid);
 
@@ -84,8 +86,18 @@ void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid);
  * @param broker
  * @param username
  * @param password
+ *
+ * Note: Only has effect before to call mqtt_connect
  **/
 void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const char* password);
+
+/**
+ * @param broker
+ * @param alive
+ *
+ * Note: Only has effect before to call mqtt_connect
+ **/
+void mqtt_set_alive(mqtt_broker_handle_t* broker, uint16_t alive);
 
 /**
  * @param broker
