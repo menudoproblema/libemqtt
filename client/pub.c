@@ -217,6 +217,29 @@ int main(int argc, char* argv[]) {
 		return -3;
 	}
 
+	mqtt_pubrel(&broker, msg_id);
+	packet_length = read_packet(1);
+	if(packet_length < 0)
+	{
+		fprintf(stderr, "Error(%d) on read packet!\n", packet_length);
+		return -1;
+	}
+
+	if(!MQTTMessageType(packet_buffer, MQTT_MSG_PUBCOMP))
+	{
+		fprintf(stderr, "PUBCOMP expected!\n");
+		return -2;
+	}
+
+	msg_id_rcv = 0;
+	msg_id_rcv = packet_buffer[2]<<8;
+	msg_id_rcv |= packet_buffer[3];
+	if(msg_id != msg_id_rcv)
+	{
+		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
+		return -3;
+	}
+
 	mqtt_disconnect(&broker);
 	close_socket(&broker);
 	return 0;
