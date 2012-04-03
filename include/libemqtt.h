@@ -121,6 +121,7 @@ int mqtt_disconnect(mqtt_broker_handle_t* broker);
  * @param broker
  * @param topic
  * @param msg
+ * @param retain
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
@@ -131,12 +132,23 @@ int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* ms
  * @param broker
  * @param topic
  * @param msg
+ * @param retain
  * @param qos
+ * @param message_id
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
 int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos, uint16_t* message_id);
+
+/**
+ * @param broker
+ * @param message_id
+ *
+ * @return On success, 1 is returned. On connection error, 0 is returned.
+ * On IO error, -1 is returned.
+ **/
+int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id);
 
 /**
  * @param broker

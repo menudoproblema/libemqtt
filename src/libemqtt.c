@@ -234,6 +234,22 @@ int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const
 	return 1;
 }
 
+int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id)
+{
+	uint8_t packet[] = {
+		MQTT_MSG_PUBREL | MQTT_QOS1_FLAG, // Message Type, DUP flag, QoS level, Retain
+		0x02, // Remaining length
+		message_id>>8,
+		message_id&0xFF
+	};
+
+	// Send the packet
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet))
+		return -1;
+
+	return 1;
+}
+
 int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic)
 {
 	uint16_t topiclen = strlen(topic);
