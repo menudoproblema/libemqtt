@@ -54,6 +54,8 @@
 #define MQTT_MSG_PINGRESP     13<<4
 #define MQTT_MSG_DISCONNECT   14<<4
 
+#define MQTTMessageType(buffer, type) ( (buffer[0]&0xF0) & type )
+
 
 typedef struct {
 	void* socket_info;
@@ -124,6 +126,17 @@ int mqtt_disconnect(mqtt_broker_handle_t* broker);
  * On IO error, -1 is returned.
  **/
 int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain);
+
+/**
+ * @param broker
+ * @param topic
+ * @param msg
+ * @param qos
+ *
+ * @return On success, 1 is returned. On connection error, 0 is returned.
+ * On IO error, -1 is returned.
+ **/
+int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos);
 
 /**
  * @param broker

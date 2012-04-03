@@ -177,19 +177,43 @@ int mqtt_ping(mqtt_broker_handle_t* broker)
 
 int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain)
 {
+	return mqtt_publish_with_qos(broker, topic, msg, retain, 0);
+}
+
+int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos)
+{
 	uint16_t topiclen = strlen(topic);
 	uint16_t msglen = strlen(msg);
 
+	uint8_t qos_flag = MQTT_QOS0_FLAG;
+	uint8_t qos_size = 0; // No QoS included
+	if(qos == 1)
+	{
+		qos_size = 2; // 2 bytes for QoS
+		qos_flag = MQTT_QOS1_FLAG;
+	}
+	else if(qos == 2)
+	{
+		qos_size = 2; // 2 bytes for QoS
+		qos_flag = MQTT_QOS2_FLAG;
+	}
+
 	// Variable header
-	uint8_t var_header[topiclen+2]; // Topic size (2 bytes), utf-encoded topic
+	uint8_t var_header[topiclen+2+qos_size]; // Topic size (2 bytes), utf-encoded topic
 	memset(var_header, 0, sizeof(var_header));
 	var_header[0] = topiclen>>8;
 	var_header[1] = topiclen&0xFF;
 	memcpy(var_header+2, topic, topiclen);
+	if(qos_size)
+	{
+		var_header[topiclen+2] = broker->seq>>8;
+		var_header[topiclen+3] = broker->seq&0xFF;
+		broker->seq++;
+	}
 
 	// Fixed header
 	uint8_t fixed_header[] = {
-		MQTT_MSG_PUBLISH, // Message Type, DUP flag, QoS level, Retain
+		MQTT_MSG_PUBLISH | qos_flag, // Message Type, DUP flag, QoS level, Retain
 		sizeof(var_header)+msglen // Remaining length
 	};
 	if(retain)
@@ -213,7 +237,10 @@ int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic)
 	uint16_t topiclen = strlen(topic);
 
 	// Variable header
-	uint8_t var_header[] = {0x00, 0x0a}; // Message ID
+	uint8_t var_header[2]; // Message ID
+	var_header[0] = broker->seq>>8;
+	var_header[1] = broker->seq&0xFF;
+	broker->seq++;
 
 	// utf topic
 	uint8_t utf_topic[topiclen+3]; // Topic size (2 bytes), utf-encoded topic, QoS byte
@@ -246,7 +273,10 @@ int mqtt_unsubscribe(mqtt_broker_handle_t* broker, const char* topic)
 	uint16_t topiclen = strlen(topic);
 
 	// Variable header
-	uint8_t var_header[] = {0x00, 0x0a}; // Message ID
+	uint8_t var_header[2]; // Message ID
+	var_header[0] = broker->seq>>8;
+	var_header[1] = broker->seq&0xFF;
+	broker->seq++;
 
 	// utf topic
 	uint8_t utf_topic[topiclen+2]; // Topic size (2 bytes), utf-encoded topic
