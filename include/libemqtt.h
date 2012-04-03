@@ -136,7 +136,7 @@ int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* ms
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos);
+int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos, uint16_t* message_id);
 
 /**
  * @param broker
