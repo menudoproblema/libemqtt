@@ -157,6 +157,12 @@ int main(int argc, char* argv[]) {
 		return -2;
 	}
 
+	if(packet_buffer[3] != 0x00)
+	{
+		fprintf(stderr, "CONNACK failed!\n");
+		return -2;
+	}
+
 	// Publish QoS 0
 	printf("Publish: QoS 0\n");
 	mqtt_publish(&broker, "hello/emqtt", "Example: QoS 0", 0);
