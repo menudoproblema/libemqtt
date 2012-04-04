@@ -25,26 +25,39 @@
 #include <libemqtt.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <linux/tcp.h>
+#include <signal.h>
 
+
+#define RCVBUFSIZE 1024
+uint8_t packet_buffer[RCVBUFSIZE];
+
+int keepalive = 5;
+mqtt_broker_handle_t broker;
 
 int socket_id;
 
+
+
 int send_packet(void* socket_info, const void* buf, unsigned int count)
 {
-	return write(*((int*)socket_info), (uint8_t*)buf, count);
+	int fd = *((int*)socket_info);
+	return send(fd, buf, count, 0);
 }
 
-int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port)
+int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port, int keepalive)
 {
+	int flag = 1;
+
+	// Create the socket
 	if((socket_id = socket(PF_INET, SOCK_STREAM, 0)) < 0)
 		return -1;
 
-	// Prevent buffering
-	int flag = 1;
-	if (setsockopt(socket_id, IPPROTO_TCP, TCP_NODELAY, (char*) &flag, sizeof(flag)) < 0)
+	// Disable Nagle Algorithm
+	if (setsockopt(socket_id, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag)) < 0)
 		return -2;
 
 	struct sockaddr_in socket_address;
@@ -53,10 +66,12 @@ int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port)
 	socket_address.sin_port = htons(port);
 	socket_address.sin_addr.s_addr = inet_addr(hostname);
 
-	// Connect
+	// Connect the socket
 	if((connect(socket_id, (struct sockaddr*)&socket_address, sizeof(socket_address))) < 0)
 		return -1;
 
+	// MQTT stuffs
+	mqtt_set_alive(broker, keepalive);
 	broker->socket_info = (void*)&socket_id;
 	broker->send = send_packet;
 
@@ -65,36 +80,146 @@ int init_socket(mqtt_broker_handle_t* broker, const char* hostname, short port)
 
 int close_socket(mqtt_broker_handle_t* broker)
 {
-	return close(*(int*)broker->socket_info);
+	int fd = *((int*)broker->socket_info);
+	return close(fd);
 }
 
 
-int main() {
-	mqtt_broker_handle_t broker;
-	int result, count = 0;
 
-	mqtt_init(&broker, "libemqtt sub");
-	init_socket(&broker, "192.168.10.40", 1883);
 
-	result = mqtt_connect(&broker);
-	printf("Connect: %d\n", result);
+int read_packet(int timeout)
+{
+	if(timeout > 0)
+	{
+		fd_set readfds;
+		struct timeval tmv;
 
-	result = mqtt_subscribe(&broker, "hello/emqtt");
-	printf("Subscribe: %d\n", result);
+		// Initialize the file descriptor set
+		FD_ZERO (&readfds);
+		FD_SET (socket_id, &readfds);
 
-	// Keep alive for 10 pings
-	while(count < 10){
-		printf("Ping: %d\n", count);
-		count++;
-		mqtt_ping(&broker);
-		sleep(1);
+		// Initialize the timeout data structure
+		tmv.tv_sec = timeout;
+		tmv.tv_usec = 0;
+
+		// select returns 0 if timeout, 1 if input available, -1 if error
+		if(select(1, &readfds, NULL, NULL, &tmv))
+			return -2;
 	}
 
-	result = mqtt_unsubscribe(&broker, "hello/emqtt");
-	printf("Unsubscribe: %d\n", result);
+	int total_bytes = 0, bytes_rcvd, packet_length;
+	memset(packet_buffer, 0, sizeof(packet_buffer));
 
+	while(total_bytes < 2) // Reading fixed header
+	{
+		if((bytes_rcvd = recv(socket_id, (packet_buffer+total_bytes), RCVBUFSIZE, 0)) <= 0)
+			return -1;
+		total_bytes += bytes_rcvd; // Keep tally of total bytes
+	}
+
+	packet_length = packet_buffer[1] + 2; // Remaining length + fixed header length
+
+	while(total_bytes < packet_length) // Reading the packet
+	{
+		if((bytes_rcvd = recv(socket_id, (packet_buffer+total_bytes), RCVBUFSIZE, 0)) <= 0)
+			return -1;
+		total_bytes += bytes_rcvd; // Keep tally of total bytes
+	}
+
+	return packet_length;
+}
+
+
+void alive(int sig)
+{
+	printf("Timeout! Sending ping...\n");
+	mqtt_ping(&broker);
+
+	alarm(keepalive);
+}
+
+
+
+
+int main()
+{
+	int packet_length;
+	uint16_t msg_id, msg_id_rcv;
+
+	mqtt_init(&broker, "libemqtt sub");
+	init_socket(&broker, "192.168.10.40", 1883, keepalive);
+
+	// >>>>> CONNECT
+	mqtt_connect(&broker);
+	// <<<<< CONNACK
+	packet_length = read_packet(1);
+	if(packet_length < 0)
+	{
+		fprintf(stderr, "Error(%d) on read packet!\n", packet_length);
+		return -1;
+	}
+
+	if(!MQTTMessageType(packet_buffer, MQTT_MSG_CONNACK))
+	{
+		fprintf(stderr, "CONNACK expected!\n");
+		return -2;
+	}
+
+	if(packet_buffer[3] != 0x00)
+	{
+		fprintf(stderr, "CONNACK failed!\n");
+		return -2;
+	}
+
+	// Signals after connect MQTT
+	signal(SIGALRM, alive);
+	alarm(keepalive);
+
+	// >>>>> SUBSCRIBE
+	mqtt_subscribe(&broker, "hello/emqtt", &msg_id);
+	// <<<<< SUBACK
+	packet_length = read_packet(1);
+	if(packet_length < 0)
+	{
+		fprintf(stderr, "Error(%d) on read packet!\n", packet_length);
+		return -1;
+	}
+
+	if(!MQTTMessageType(packet_buffer, MQTT_MSG_SUBACK))
+	{
+		fprintf(stderr, "SUBACK expected!\n");
+		return -2;
+	}
+
+	msg_id_rcv = 0;
+	msg_id_rcv = packet_buffer[2]<<8;
+	msg_id_rcv |= packet_buffer[3];
+	if(msg_id != msg_id_rcv)
+	{
+		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
+		return -3;
+	}
+
+	while(1)
+	{
+		packet_length = read_packet(0);
+		printf("L:%d\n", packet_length);
+		if(packet_length == -1)
+		{
+			fprintf(stderr, "Error(%d) on read packet!\n", packet_length);
+			return -1;
+		}
+		else if(packet_length > 0)
+		{
+			printf("Packet Header: 0x%x...\n", packet_buffer[0]);
+		}
+
+	}
+	// TODO: Unreachable code -> catch signal
 	mqtt_disconnect(&broker);
 	close_socket(&broker);
+
+
 
 	return 0;
 }

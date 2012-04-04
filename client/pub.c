@@ -133,7 +133,8 @@ int read_packet(int timeout)
 
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	int packet_length;
 	uint16_t msg_id, msg_id_rcv;
 	mqtt_broker_handle_t broker;
