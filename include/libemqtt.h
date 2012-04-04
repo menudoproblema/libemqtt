@@ -54,7 +54,7 @@
 #define MQTT_MSG_PINGRESP     13<<4
 #define MQTT_MSG_DISCONNECT   14<<4
 
-#define MQTTMessageType(buffer, type) ( (buffer[0]&0xF0) & type )
+#define MQTTMessageType(buffer, type) ( (*buffer&0xF0) & type )
 
 #define MQTTMessageIDFromBuffer(buffer, id) { id = 0; id = *(buffer)<<8; id |= *(buffer+1); }
 
