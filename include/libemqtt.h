@@ -54,12 +54,30 @@
 #define MQTT_MSG_PINGRESP     13<<4
 #define MQTT_MSG_DISCONNECT   14<<4
 
-/** Extract message type from buffer. Details follow
- *  here.
- */
-#define MQTTMessageType(buffer, type) ( (*buffer&0xF0) & type )
 
+/** Extract the message type from buffer.
+ * @param buffer Pointer to the packet.
+ *
+ * @return Message Type byte.
+ */
+#define MQTTMessageType(buffer) ( *buffer & 0xF0 )
+
+/** Extract the message id from buffer.
+ * @param buffer Pointer to the packet.
+ * @param id Variable that will store the message id.
+ *
+ * @return None.
+ */
 #define MQTTMessageID(buffer, id) { id = 0; id = *(buffer)<<8; id |= *(buffer+1); }
+
+/** Check if buffered packet is a particular type.
+ * @param buffer Pointer to the packet.
+ * @param type Type which will be checked.
+ *
+ * @return If buffered packet is not a ``type`` packet 0 is returned.
+ *         In other case, a non zero value is returned.
+ */
+#define MQTTCheckMessageType(buffer, type) ( MQTTMessageType(buffer) & type )
 
 
 typedef struct {
