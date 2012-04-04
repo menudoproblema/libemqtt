@@ -191,9 +191,7 @@ int main()
 		return -2;
 	}
 
-	msg_id_rcv = 0;
-	msg_id_rcv = packet_buffer[2]<<8;
-	msg_id_rcv |= packet_buffer[3];
+	MQTTMessageIDFromBuffer((packet_buffer+2), msg_id_rcv);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);

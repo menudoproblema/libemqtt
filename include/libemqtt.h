@@ -56,6 +56,8 @@
 
 #define MQTTMessageType(buffer, type) ( (buffer[0]&0xF0) & type )
 
+#define MQTTMessageIDFromBuffer(buffer, id) { id = 0; id = *(buffer)<<8; id |= *(buffer+1); }
+
 
 typedef struct {
 	void* socket_info;
