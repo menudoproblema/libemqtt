@@ -143,8 +143,9 @@ int main(int argc, char* argv[])
 	mqtt_init_auth(&broker, "username", NULL);
 	init_socket(&broker, "192.168.10.40", 1883);
 
-	// Connect
+	// >>>>> CONNECT
 	mqtt_connect(&broker);
+	// <<<<< CONNACK
 	packet_length = read_packet(1);
 	if(packet_length < 0)
 	{
@@ -164,13 +165,14 @@ int main(int argc, char* argv[])
 		return -2;
 	}
 
-	// Publish QoS 0
+	// >>>>> PUBLISH QoS 0
 	printf("Publish: QoS 0\n");
 	mqtt_publish(&broker, "hello/emqtt", "Example: QoS 0", 0);
 
-	// Publish QoS 1
+	// >>>>> PUBLISH QoS 1
 	printf("Publish: QoS 1\n");
 	mqtt_publish_with_qos(&broker, "hello/emqtt", "Example: QoS 1", 0, 1, &msg_id);
+	// <<<<< PUBACK
 	packet_length = read_packet(1);
 	if(packet_length < 0)
 	{
@@ -193,9 +195,10 @@ int main(int argc, char* argv[])
 		return -3;
 	}
 
-	// Publish QoS 2
+	// >>>>> PUBLISH QoS 2
 	printf("Publish: QoS 2\n");
 	mqtt_publish_with_qos(&broker, "hello/emqtt", "Example: QoS 2", 1, 2, &msg_id); // Retain
+	// <<<<< PUBACK
 	packet_length = read_packet(1);
 	if(packet_length < 0)
 	{
@@ -218,7 +221,9 @@ int main(int argc, char* argv[])
 		return -3;
 	}
 
+	// >>>>> PUBREL
 	mqtt_pubrel(&broker, msg_id);
+	// <<<<< PUBCOMP
 	packet_length = read_packet(1);
 	if(packet_length < 0)
 	{
@@ -241,6 +246,7 @@ int main(int argc, char* argv[])
 		return -3;
 	}
 
+	// >>>>> DISCONNECT
 	mqtt_disconnect(&broker);
 	close_socket(&broker);
 	return 0;

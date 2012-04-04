@@ -202,8 +202,8 @@ int main()
 
 	while(1)
 	{
+		// <<<<<
 		packet_length = read_packet(0);
-		printf("L:%d\n", packet_length);
 		if(packet_length == -1)
 		{
 			fprintf(stderr, "Error(%d) on read packet!\n", packet_length);
@@ -216,6 +216,7 @@ int main()
 
 	}
 	// TODO: Unreachable code -> catch signal
+	// >>>>> DISCONNECT
 	mqtt_disconnect(&broker);
 	close_socket(&broker);
 
