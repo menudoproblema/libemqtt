@@ -80,6 +80,7 @@
 #define MQTTCheckMessageType(buffer, type) ( MQTTMessageType(buffer) & type )
 
 
+
 typedef struct {
 	void* socket_info;
 	int (*send)(void* socket_info, const void* buf, unsigned int count);
@@ -99,106 +100,116 @@ typedef struct {
 
 
 
-/**
- * @param broker
- * @param clientid
+/** Initialize the information to connect to the broker.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param clientid A string that identifies the client id.
  *
- * Note: Only has effect before to call mqtt_connect
+ * @note Only has effect before to call mqtt_connect
  */
 void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid);
 
-/**
- * @param broker
- * @param username
- * @param password
+/** Enable the authentication to connect to the broker.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param username A string that contains the username.
+ * @param password A string that contains the password.
  *
- * Note: Only has effect before to call mqtt_connect
+ * @note Only has effect before to call mqtt_connect
  */
 void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const char* password);
 
-/**
- * @param broker
- * @param alive
+/** Set the keep alive timer.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param alive Keep aliver timer value (in seconds).
  *
- * Note: Only has effect before to call mqtt_connect
+ * @note Only has effect before to call mqtt_connect
  */
 void mqtt_set_alive(mqtt_broker_handle_t* broker, uint16_t alive);
 
-/**
- * @param broker
+/** Connect to the broker.
+ * @param broker Data structure that contains the connection information with the broker.
  *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
  */
 int mqtt_connect(mqtt_broker_handle_t* broker);
 
-/**
- * @param broker
+/** Disconnect to the broker.
+ * @param broker Data structure that contains the connection information with the broker.
  *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
+ * @note The socket must also be closed.
+ *
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
  */
 int mqtt_disconnect(mqtt_broker_handle_t* broker);
 
-/**
- * @param broker
- * @param topic
- * @param msg
- * @param retain
+/** Publish a message on a topic. This message will be published with 0 Qos level.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param topic The topic name.
+ * @param msg The message.
+ * @param retain Enable or disable the Retain flag (values: 0 or 1).
  *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
  */
 int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain);
 
-/**
- * @param broker
- * @param topic
- * @param msg
- * @param retain
- * @param qos
- * @param message_id
+/** Publish a message on a topic.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param topic The topic name.
+ * @param msg The message.
+ * @param retain Enable or disable the Retain flag (values: 0 or 1).
+ * @param qos Quality of Service (values: 0, 1 or 2)
+ * @param message_id Variable that will store the Message ID, if the pointer is not NULL.
  *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
  */
 int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos, uint16_t* message_id);
 
-/**
- * @param broker
- * @param message_id
+/** Send a PUBREL message. It's used for PUBLISH message with 2 QoS level.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param message_id Message ID
  *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
  */
 int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id);
 
-/**
- * @param broker
- * @param topic
- * @param message_id
+/** Subscribe to a topic.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param topic The topic name.
+ * @param message_id Variable that will store the Message ID, if the pointer is not NULL.
  *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
  */
 int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic, uint16_t* message_id);
 
-/**
- * @param broker
+/** Unsubscribe from a topic.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param topic The topic name.
  *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
- */
-int mqtt_ping(mqtt_broker_handle_t* broker);
-
-/**
- * @param broker
- * @param topic
- *
- * @return On success, 1 is returned. On connection error, 0 is returned.
- * On IO error, -1 is returned.
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
  */
 int mqtt_unsubscribe(mqtt_broker_handle_t* broker, const char* topic);
+
+/** Make a ping.
+ * @param broker Data structure that contains the connection information with the broker.
+ *
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
+ */
+int mqtt_ping(mqtt_broker_handle_t* broker);
 
 
 #endif // __LIBEMQTT_H__
