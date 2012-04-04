@@ -153,11 +153,12 @@ int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id);
 /**
  * @param broker
  * @param topic
+ * @param message_id
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
  **/
-int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic);
+int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic, uint16_t* message_id);
 
 /**
  * @param broker

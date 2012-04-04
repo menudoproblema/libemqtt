@@ -250,7 +250,7 @@ int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id)
 	return 1;
 }
 
-int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic)
+int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic, uint16_t* message_id)
 {
 	uint16_t topiclen = strlen(topic);
 
@@ -258,6 +258,7 @@ int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic)
 	uint8_t var_header[2]; // Message ID
 	var_header[0] = broker->seq>>8;
 	var_header[1] = broker->seq&0xFF;
+	*message_id = broker->seq;
 	broker->seq++;
 
 	// utf topic
