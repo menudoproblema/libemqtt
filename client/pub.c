@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTMessageType(packet_buffer, MQTT_MSG_CONNACK))
+	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_CONNACK))
 	{
 		fprintf(stderr, "CONNACK expected!\n");
 		return -2;
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTMessageType(packet_buffer, MQTT_MSG_PUBACK))
+	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_PUBACK))
 	{
 		fprintf(stderr, "PUBACK expected!\n");
 		return -2;
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTMessageType(packet_buffer, MQTT_MSG_PUBACK))
+	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_PUBACK))
 	{
 		fprintf(stderr, "PUBACK expected!\n");
 		return -2;
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTMessageType(packet_buffer, MQTT_MSG_PUBCOMP))
+	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_PUBCOMP))
 	{
 		fprintf(stderr, "PUBCOMP expected!\n");
 		return -2;

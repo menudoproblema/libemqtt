@@ -159,7 +159,7 @@ int main()
 		return -1;
 	}
 
-	if(!MQTTMessageType(packet_buffer, MQTT_MSG_CONNACK))
+	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_CONNACK))
 	{
 		fprintf(stderr, "CONNACK expected!\n");
 		return -2;
@@ -185,7 +185,7 @@ int main()
 		return -1;
 	}
 
-	if(!MQTTMessageType(packet_buffer, MQTT_MSG_SUBACK))
+	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_SUBACK))
 	{
 		fprintf(stderr, "SUBACK expected!\n");
 		return -2;
