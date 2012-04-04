@@ -13,7 +13,7 @@
 
  * You should have received a copy of the GNU General Public License
  * along with libemqtt.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 /*
  *
@@ -54,9 +54,12 @@
 #define MQTT_MSG_PINGRESP     13<<4
 #define MQTT_MSG_DISCONNECT   14<<4
 
+/** Extract message type from buffer. Details follow
+ *  here.
+ */
 #define MQTTMessageType(buffer, type) ( (*buffer&0xF0) & type )
 
-#define MQTTMessageIDFromBuffer(buffer, id) { id = 0; id = *(buffer)<<8; id |= *(buffer+1); }
+#define MQTTMessageID(buffer, id) { id = 0; id = *(buffer)<<8; id |= *(buffer+1); }
 
 
 typedef struct {
@@ -83,7 +86,7 @@ typedef struct {
  * @param clientid
  *
  * Note: Only has effect before to call mqtt_connect
- **/
+ */
 void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid);
 
 /**
@@ -92,7 +95,7 @@ void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid);
  * @param password
  *
  * Note: Only has effect before to call mqtt_connect
- **/
+ */
 void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const char* password);
 
 /**
@@ -100,7 +103,7 @@ void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const ch
  * @param alive
  *
  * Note: Only has effect before to call mqtt_connect
- **/
+ */
 void mqtt_set_alive(mqtt_broker_handle_t* broker, uint16_t alive);
 
 /**
@@ -108,7 +111,7 @@ void mqtt_set_alive(mqtt_broker_handle_t* broker, uint16_t alive);
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_connect(mqtt_broker_handle_t* broker);
 
 /**
@@ -116,7 +119,7 @@ int mqtt_connect(mqtt_broker_handle_t* broker);
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_disconnect(mqtt_broker_handle_t* broker);
 
 /**
@@ -127,7 +130,7 @@ int mqtt_disconnect(mqtt_broker_handle_t* broker);
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain);
 
 /**
@@ -140,7 +143,7 @@ int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* ms
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos, uint16_t* message_id);
 
 /**
@@ -149,7 +152,7 @@ int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id);
 
 /**
@@ -159,7 +162,7 @@ int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id);
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic, uint16_t* message_id);
 
 /**
@@ -167,7 +170,7 @@ int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic, uint16_t* me
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_ping(mqtt_broker_handle_t* broker);
 
 /**
@@ -176,7 +179,7 @@ int mqtt_ping(mqtt_broker_handle_t* broker);
  *
  * @return On success, 1 is returned. On connection error, 0 is returned.
  * On IO error, -1 is returned.
- **/
+ */
 int mqtt_unsubscribe(mqtt_broker_handle_t* broker, const char* topic);
 
 

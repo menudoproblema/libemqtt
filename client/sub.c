@@ -13,7 +13,7 @@
 
  * You should have received a copy of the GNU General Public License
  * along with libemqtt.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 /*
  *
@@ -191,7 +191,7 @@ int main()
 		return -2;
 	}
 
-	MQTTMessageIDFromBuffer((packet_buffer+2), msg_id_rcv);
+	MQTTMessageID((packet_buffer+2), msg_id_rcv);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
@@ -217,8 +217,6 @@ int main()
 	// >>>>> DISCONNECT
 	mqtt_disconnect(&broker);
 	close_socket(&broker);
-
-
 
 	return 0;
 }
