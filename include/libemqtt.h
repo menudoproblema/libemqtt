@@ -60,7 +60,7 @@
  *
  * @return Message Type byte.
  */
-#define MQTTMessageType(buffer) ( *buffer & 0xF0 )
+#define MQTTParseMessageType(buffer) ( *buffer & 0xF0 )
 
 /** Extract the message id from buffer.
  * @param buffer Pointer to the packet.
@@ -69,9 +69,9 @@
  *
  * @return None.
  */
-#define MQTTMessageId(buffer, id) {										\
-	uint8_t type = MQTTMessageType(buffer);								\
-	uint8_t qos = MQTTMessageQos(buffer);								\
+#define MQTTParseMessageId(buffer, id) {								\
+	uint8_t type = MQTTParseMessageType(buffer);						\
+	uint8_t qos = MQTTParseMessageQos(buffer);							\
 	id = 0;																\
 	if(type >= MQTT_MSG_PUBLISH && type <= MQTT_MSG_UNSUBACK)			\
 	{																	\
@@ -96,22 +96,46 @@
  *
  * @return QoS Level (0, 1 or 2).
  */
-#define MQTTMessageQos(buffer) ( (*buffer & 0x06) >> 1 )
+#define MQTTParseMessageQos(buffer) ( (*buffer & 0x06) >> 1 )
 
 /** Extract the topic from a publish message.
  * If the packet is not a publish message, this macro has no effect.
  * @param buffer Pointer to the packet.
- * @param topic Buffer where topic will be copied.
+ * @param topic Buffer where the topic will be copied.
  * @param len This variable will store the length of the topic.
  *
  * @return None.
  */
-#define MQTTPublishMessageTopic(buffer, topic, len) {					\
-	if(MQTTMessageType(buffer) == MQTT_MSG_PUBLISH)						\
+#define MQTTParsePublishTopic(buffer, topic, len) {						\
+	if(MQTTParseMessageType(buffer) == MQTT_MSG_PUBLISH)				\
 	{																	\
 		len = *(buffer+2)<<8; len |= *(buffer+3);						\
 		memcpy(topic, (buffer + 4), len);								\
-		*(topic + len) = 0;												\
+	}																	\
+}
+
+/** Extract the message from a publish message.
+ * If the packet is not a publish message, this macro has no effect.
+ * @param buffer Pointer to the packet.
+ * @param msg Buffer where the message will be copied.
+ * @param len This variable will store the length of the message.
+ *
+ * @return None.
+ */
+#define MQTTParsePublishMessage(buffer, msg, len) {						\
+	if(MQTTParseMessageType(buffer) == MQTT_MSG_PUBLISH)				\
+	{																	\
+		/* Offset: Topic length */										\
+		uint8_t offset = *(buffer+2)<<8; offset |= *(buffer+3);			\
+		/* Offset: 2 bytes of topic length */							\
+		offset += 2;													\
+		/* Offset: QoS */												\
+		if(MQTTParseMessageQos(buffer)) offset += 2;					\
+		/* Length of the message */										\
+		len = buffer[1] - offset;										\
+		/* Offset: Fixed header */										\
+		offset += 2;													\
+		memcpy(msg, (buffer + offset), len);							\
 	}																	\
 }
 
