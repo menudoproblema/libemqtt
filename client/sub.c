@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <linux/tcp.h>
@@ -138,6 +139,16 @@ void alive(int sig)
 	alarm(keepalive);
 }
 
+void term(int sig)
+{
+	printf("Goodbye!\n");
+	// >>>>> DISCONNECT
+	mqtt_disconnect(&broker);
+	close_socket(&broker);
+
+	exit(0);
+}
+
 
 
 
@@ -174,6 +185,7 @@ int main()
 	// Signals after connect MQTT
 	signal(SIGALRM, alive);
 	alarm(keepalive);
+	signal(SIGINT, term);
 
 	// >>>>> SUBSCRIBE
 	mqtt_subscribe(&broker, "hello/emqtt", &msg_id);
@@ -213,10 +225,6 @@ int main()
 		}
 
 	}
-	// TODO: Unreachable code -> catch signal
-	// >>>>> DISCONNECT
-	mqtt_disconnect(&broker);
-	close_socket(&broker);
 
 	return 0;
 }
