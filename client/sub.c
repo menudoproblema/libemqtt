@@ -170,7 +170,7 @@ int main()
 		return -1;
 	}
 
-	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_CONNACK))
+	if(MQTTMessageType(packet_buffer) != MQTT_MSG_CONNACK)
 	{
 		fprintf(stderr, "CONNACK expected!\n");
 		return -2;
@@ -197,13 +197,13 @@ int main()
 		return -1;
 	}
 
-	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_SUBACK))
+	if(MQTTMessageType(packet_buffer) != MQTT_MSG_SUBACK)
 	{
 		fprintf(stderr, "SUBACK expected!\n");
 		return -2;
 	}
 
-	MQTTMessageID((packet_buffer+2), msg_id_rcv);
+	MQTTMessageId(packet_buffer, msg_id_rcv);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
@@ -222,6 +222,13 @@ int main()
 		else if(packet_length > 0)
 		{
 			printf("Packet Header: 0x%x...\n", packet_buffer[0]);
+			if(MQTTMessageType(packet_buffer) == MQTT_MSG_PUBLISH)
+			{
+				char topic[100];
+				int len;
+				MQTTPublishMessageTopic(packet_buffer, topic, len);
+				printf("Topic: %s, len: %d\n", topic, len);
+			}
 		}
 
 	}

@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_CONNACK))
+	if(MQTTMessageType(packet_buffer) != MQTT_MSG_CONNACK)
 	{
 		fprintf(stderr, "CONNACK expected!\n");
 		return -2;
@@ -180,13 +180,13 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_PUBACK))
+	if(MQTTMessageType(packet_buffer) != MQTT_MSG_PUBACK)
 	{
 		fprintf(stderr, "PUBACK expected!\n");
 		return -2;
 	}
 
-	MQTTMessageID((packet_buffer+2), msg_id_rcv);
+	MQTTMessageId(packet_buffer, msg_id_rcv);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
@@ -204,13 +204,13 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_PUBACK))
+	if(MQTTMessageType(packet_buffer) != MQTT_MSG_PUBREC)
 	{
-		fprintf(stderr, "PUBACK expected!\n");
+		fprintf(stderr, "PUBREC expected!\n");
 		return -2;
 	}
 
-	MQTTMessageID((packet_buffer+2), msg_id_rcv);
+	MQTTMessageId(packet_buffer, msg_id_rcv);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
@@ -227,13 +227,13 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(!MQTTCheckMessageType(packet_buffer, MQTT_MSG_PUBCOMP))
+	if(MQTTMessageType(packet_buffer) != MQTT_MSG_PUBCOMP)
 	{
 		fprintf(stderr, "PUBCOMP expected!\n");
 		return -2;
 	}
 
-	MQTTMessageID((packet_buffer+2), msg_id_rcv);
+	MQTTMessageId(packet_buffer, msg_id_rcv);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
