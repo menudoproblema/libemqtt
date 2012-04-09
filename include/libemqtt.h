@@ -68,7 +68,34 @@
  *
  * @return None.
  */
-#define MQTTMessageID(buffer, id) { id = 0; id = *(buffer)<<8; id |= *(buffer+1); }
+#define MQTTMessageId(buffer, id) {										\
+	uint8_t type = MQTTMessageType(buffer);								\
+	uint8_t qos = MQTTMessageQos(buffer);								\
+	id = 0;																\
+	if(type >= MQTT_MSG_PUBLISH && type <= MQTT_MSG_UNSUBACK)			\
+	{																	\
+		if(type == MQTT_MSG_PUBLISH)									\
+		{																\
+			if(qos != 0)												\
+			{															\
+				uint8_t offset = *(buffer+2)<<8; offset |= *(buffer+3);	\
+				offset += 4; /* Fixed header + Topic utf8-encoded */	\
+				/* Fixed header length + Topic utf8-encoded */			\
+				id = *(buffer+offset)<<8; id |= *(buffer+offset+1);		\
+			}															\
+		}																\
+		else															\
+			/* Fixed header length */									\
+			id = *(buffer+2)<<8; id |= *(buffer+3);						\
+	}																	\
+}
+
+/** Extract the message QoS level.
+ * @param buffer Pointer to the packet.
+ *
+ * @return QoS Level (0, 1 or 2).
+ */
+#define MQTTMessageQos(buffer) ( (*buffer & 0x06) >> 1 )
 
 /** Check if buffered packet is a particular type.
  * @param buffer Pointer to the packet.
