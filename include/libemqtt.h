@@ -98,15 +98,6 @@
  */
 #define MQTTMessageQos(buffer) ( (*buffer & 0x06) >> 1 )
 
-/** Check if buffered packet is a particular type.
- * @param buffer Pointer to the packet.
- * @param type Type which will be checked.
- *
- * @return If buffered packet is not a ``type`` packet 0 is returned.
- *         In other case, a non zero value is returned.
- */
-#define MQTTCheckMessageType(buffer, type) ( MQTTMessageType(buffer) & type )
-
 /** Extract the topic from a publish message.
  * If the packet is not a publish message, this macro has no effect.
  * @param buffer Pointer to the packet.
