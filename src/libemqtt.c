@@ -46,7 +46,7 @@ void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid)
 {
 	// Connection options
 	broker->alive = 300; // 300 seconds = 5 minutes
-	broker->seq = 0; // Sequency for message indetifiers
+	broker->seq = 1; // Sequency for message indetifiers
 	// Client options
 	memset(broker->clientid, 0, sizeof(broker->clientid));
 	memset(broker->username, 0, sizeof(broker->username));
