@@ -64,7 +64,8 @@
 
 /** Extract the message id from buffer.
  * @param buffer Pointer to the packet.
- * @param id Variable that will store the message id.
+ * @param id This variable will store the message id. If the message has
+ *        not Message ID, it will set to 0.
  *
  * @return None.
  */
@@ -105,6 +106,23 @@
  *         In other case, a non zero value is returned.
  */
 #define MQTTCheckMessageType(buffer, type) ( MQTTMessageType(buffer) & type )
+
+/** Extract the topic from a publish message.
+ * If the packet is not a publish message, this macro has no effect.
+ * @param buffer Pointer to the packet.
+ * @param topic Buffer where topic will be copied.
+ * @param len This variable will store the length of the topic.
+ *
+ * @return None.
+ */
+#define MQTTPublishMessageTopic(buffer, topic, len) {					\
+	if(MQTTMessageType(buffer) == MQTT_MSG_PUBLISH)						\
+	{																	\
+		len = *(buffer+2)<<8; len |= *(buffer+3);						\
+		memcpy(topic, (buffer + 4), len);								\
+		*(topic + len) = 0;												\
+	}																	\
+}
 
 
 
