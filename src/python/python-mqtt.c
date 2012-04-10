@@ -39,13 +39,14 @@ int send_packet(void* socket_info, const void* buf, unsigned int count)
 static PyObject*
 Mqtt_init(Mqtt* self, PyObject* args, PyObject* kwargs)
 {
-	static char* kwlist[] = {"socket", "clientid", "username", "password", NULL};
+	static char* kwlist[] = {"socket", "clientid", "username", "password", "keepalive", NULL};
 
 	char* clientid = "python-emqtt";
 	char* username = NULL;
 	char* password = NULL;
+	int keepalive = 300; // By default
 
-	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "O|sss", kwlist, &self->socket, &clientid, &username, &password))
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "O|sssi", kwlist, &self->socket, &clientid, &username, &password, &keepalive))
 	{
 		// TODO: Exception
 		return NULL;
@@ -53,6 +54,7 @@ Mqtt_init(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	mqtt_init(&self->broker, clientid);
 	mqtt_init_auth(&self->broker, username, password);
+	mqtt_set_alive(&self->broker, keepalive);
 
 	self->broker.socket_info = (void*)self;
 	self->broker.send = send_packet;
@@ -183,9 +185,35 @@ Mqtt_subscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 	}
 
 	result = mqtt_subscribe(&self->broker, topic, &msg_id);
-	// TODO: if result < 0: raise Exception
+	if(result <= 0)
+	{
+		// TODO: Exception
+		return NULL;
+	}
 
 	return Py_BuildValue("i", msg_id);
+}
+
+static PyObject*
+Mqtt_unsubscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
+{
+	if(self->connected <= 0) // Not connected
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	static char* kwlist[] = {"topic", NULL};
+
+	char* topic = NULL;
+
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &topic))
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	return Py_BuildValue("i", mqtt_unsubscribe(&self->broker, topic));
 }
 
 static void
@@ -209,6 +237,7 @@ static PyMethodDef Mqtt_methods[] = {
 	{ "publish", (PyCFunction) Mqtt_publish, METH_KEYWORDS, "MQTT publish." },
 	{ "pubrel", (PyCFunction) Mqtt_pubrel, METH_KEYWORDS, "MQTT pubrel." },
 	{ "subscribe", (PyCFunction) Mqtt_subscribe, METH_KEYWORDS, "MQTT subscribe." },
+	{ "unsubscribe", (PyCFunction) Mqtt_unsubscribe, METH_KEYWORDS, "MQTT unsubscribe." },
 
 	{ NULL }
 };
