@@ -10,7 +10,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with python-emqtt.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -74,9 +74,9 @@ PyObject* Mqtt_connect(MqttBroker* self)
 	if(self->connected <= 0) // Prevent reconnect
 	{
 		self->connected = mqtt_connect(&self->broker);
-		return Py_BuildValue("i", self->connected);
+		return Py_BuildValue("b", self->connected);
 	}
-	return Py_BuildValue("");
+	return Py_BuildValue("b", Py_False);
 }
 
 PyObject* Mqtt_disconnect(MqttBroker* self)
@@ -86,6 +86,15 @@ PyObject* Mqtt_disconnect(MqttBroker* self)
 		int result = mqtt_disconnect(&self->broker);
 		self->connected = 0;
 		return Py_BuildValue("i", result);
+	}
+	return Py_BuildValue("");
+}
+
+PyObject* Mqtt_ping(MqttBroker* self)
+{
+	if(self->connected > 0)
+	{
+		return Py_BuildValue("i", mqtt_ping(&self->broker));
 	}
 	return Py_BuildValue("");
 }
@@ -128,7 +137,9 @@ PyObject* Mqtt_subscribe(MqttBroker* self, PyObject* args, PyObject* kwargs)
 
 	static char* kwlist[] = {"topic", NULL};
 
+	int result;
 	char* topic = NULL;
+	uint16_t msg_id;
 
 	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &topic))
 	{
@@ -136,7 +147,10 @@ PyObject* Mqtt_subscribe(MqttBroker* self, PyObject* args, PyObject* kwargs)
 		return NULL;
 	}
 
-	return Py_BuildValue("i", mqtt_subscribe(&self->broker, topic));
+	result = mqtt_subscribe(&self->broker, topic, &msg_id);
+	// TODO: if result < 0: raise Exception
+
+	return Py_BuildValue("i", msg_id);
 }
 
 void Mqtt_dealloc(MqttBroker* self)
@@ -155,6 +169,7 @@ static PyMemberDef Mqtt_members[] = {
 static PyMethodDef Mqtt_methods[] = {
 	{ "connect", (PyCFunction) Mqtt_connect, METH_NOARGS, "MQTT connect." },
 	{ "disconnect", (PyCFunction) Mqtt_disconnect, METH_NOARGS, "MQTT disconnect." },
+	{ "ping", (PyCFunction) Mqtt_ping, METH_NOARGS, "MQTT ping." },
 	{ "publish", (PyCFunction) Mqtt_publish, METH_KEYWORDS, "MQTT publish." },
 	{ "subscribe", (PyCFunction) Mqtt_subscribe, METH_KEYWORDS, "MQTT subscribe." },
 
@@ -164,7 +179,7 @@ static PyMethodDef Mqtt_methods[] = {
 static PyTypeObject MqttType = {
 	PyObject_HEAD_INIT(NULL)
 	0,											/* ob_size */
-	"emqtt.Mqtt",								/* tp_name */
+	"emqtt.libemqtt.MQTT",						/* tp_name */
 	sizeof(MqttBroker),							/* tp_basicsize */
 	0,											/* tp_itemsize */
 	(destructor)Mqtt_dealloc,					/* tp_dealloc */
@@ -228,7 +243,7 @@ PyMODINIT_FUNC initclient(void)
     if (PyType_Ready(&MqttType) < 0)
         return;
 
-    m = Py_InitModule3("emqtt.client", Mqtt_methods, "Embedded MQTT client.");
+    m = Py_InitModule3("emqtt.libemqtt", Mqtt_methods, "Embedded MQTT library.");
 
     Py_INCREF(&MqttType);
     PyModule_AddObject(m, "Mqtt", (PyObject*)&MqttType);

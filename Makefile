@@ -36,8 +36,8 @@ sub.o: $(CLIENT)/sub.c $(INC)/libemqtt.h
 python: python-emqtt.o python-libemqtt.o
 	$(CC) $(PYTHON_LDFLAGS)  python-emqtt.o python-libemqtt.o -o $(CLIENT)/client.so
 
-python-emqtt.o: $(PYTHON_SRC)/emqtt.c $(INC)/libemqtt.h
-	$(CC) $(PYTHON_CCFLAGS) -c $(PYTHON_SRC)/emqtt.c -o python-emqtt.o
+python-emqtt.o: $(PYTHON_SRC)/libemqtt.c $(INC)/libemqtt.h
+	$(CC) $(PYTHON_CCFLAGS) -c $(PYTHON_SRC)/libemqtt.c -o python-emqtt.o
 
 python-libemqtt.o: $(SRC)/libemqtt.c $(INC)/libemqtt.h
 	$(CC) $(PYTHON_CCFLAGS) -c $(SRC)/libemqtt.c -o python-libemqtt.o
