@@ -24,27 +24,43 @@
 #include <python-mqtt_packet.h>
 
 
-PyObject* MqttPacket_init(MqttPacket* self, PyObject* args, PyObject* kwargs)
+static PyObject*
+MqttPacket_init(MqttPacket* self, PyObject* args, PyObject* kwargs)
 {
 	static char* kwlist[] = {"data", NULL};
 
-	char* data = NULL;
-
-	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &data))
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "S", kwlist, &self->data))
 	{
 		// TODO: Exception
 		return NULL;
 	}
+	const char* data = PyString_AS_STRING(self->data);
+	self->type = MQTTParseMessageType(data);
+	self->qos = MQTTParseMessageQos(data);
+	self->duplicate = Py_False;
+	if(MQTTParseMessageDuplicate(data))
+		self->duplicate = Py_True;
+	self->retain = Py_False;
+	if(MQTTParseMessageRetain(data))
+		self->retain = Py_True;
+	MQTTParseMessageId(data, self->message_id);
 
 	return Py_BuildValue("");
 }
 
-void MqttPacket_dealloc(MqttPacket* self)
+static void
+MqttPacket_dealloc(MqttPacket* self)
 {
 	self->ob_type->tp_free((PyObject*)self);
 }
 
 static PyMemberDef MqttPacket_members[] = {
+	{"type", T_INT, offsetof(MqttPacket, type), 0, "Packet type"},
+	{"qos", T_INT, offsetof(MqttPacket, qos), 0, "Quality of Service"},
+	{"duplicate", T_OBJECT_EX, offsetof(MqttPacket, duplicate), 0, "Duplicate flag"},
+	{"retain", T_OBJECT_EX, offsetof(MqttPacket, retain), 0, "Retain flag"},
+	{"message_id", T_INT, offsetof(MqttPacket, message_id), 0, "Message ID"},
+
 	{ NULL }
 };
 

@@ -28,6 +28,11 @@
 typedef struct {
 	PyObject_HEAD
 	PyObject* data;
+	uint16_t type;
+	int qos;
+	PyObject* duplicate;
+	PyObject* retain;
+	uint16_t message_id;
 } MqttPacket;
 
 extern PyTypeObject MqttPacketType;
