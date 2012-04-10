@@ -10,7 +10,7 @@ AR=ar
 
 PYTHON_VER=2.7
 PYTHON_SRC=src/python
-PYTHON_CCFLAGS=-I$(INC) -I/usr/include/python$(PYTHON_VER) -Wall -O -fPIC
+PYTHON_CCFLAGS=-I$(INC) -I$(PYTHON_SRC) -I/usr/include/python$(PYTHON_VER) -Wall -O -fPIC
 PYTHON_LDFLAGS=-shared
 
 
@@ -33,14 +33,20 @@ sub.o: $(CLIENT)/sub.c $(INC)/libemqtt.h
 
 
 
-python: python-emqtt.o python-libemqtt.o
-	$(CC) $(PYTHON_LDFLAGS)  python-emqtt.o python-libemqtt.o -o $(CLIENT)/libemqtt.so
+python: python-libemqtt.o python-mqtt.o python-mqtt_packet.o libemqtt-python.o
+	$(CC) $(PYTHON_LDFLAGS)  python-libemqtt.o python-mqtt.o python-mqtt_packet.o libemqtt-python.o -o $(CLIENT)/libemqtt.so
 
-python-emqtt.o: $(PYTHON_SRC)/libemqtt.c $(INC)/libemqtt.h
-	$(CC) $(PYTHON_CCFLAGS) -c $(PYTHON_SRC)/libemqtt.c -o python-emqtt.o
+python-libemqtt.o: $(PYTHON_SRC)/python-libemqtt.c $(INC)/libemqtt.h $(PYTHON_SRC)/python-mqtt.h $(PYTHON_SRC)/python-mqtt_packet.h
+	$(CC) $(PYTHON_CCFLAGS) -c $(PYTHON_SRC)/python-libemqtt.c -o python-libemqtt.o
 
-python-libemqtt.o: $(SRC)/libemqtt.c $(INC)/libemqtt.h
-	$(CC) $(PYTHON_CCFLAGS) -c $(SRC)/libemqtt.c -o python-libemqtt.o
+python-mqtt.o: $(PYTHON_SRC)/python-mqtt.c $(INC)/libemqtt.h $(PYTHON_SRC)/python-mqtt.h
+	$(CC) $(PYTHON_CCFLAGS) -c $(PYTHON_SRC)/python-mqtt.c -o python-mqtt.o
+
+python-mqtt_packet.o: $(PYTHON_SRC)/python-mqtt_packet.c $(INC)/libemqtt.h $(PYTHON_SRC)/python-mqtt_packet.h
+	$(CC) $(PYTHON_CCFLAGS) -c $(PYTHON_SRC)/python-mqtt_packet.c -o python-mqtt_packet.o
+
+libemqtt-python.o: $(SRC)/libemqtt.c $(INC)/libemqtt.h
+	$(CC) $(PYTHON_CCFLAGS) -c $(SRC)/libemqtt.c -o libemqtt-python.o
 
 
 python3:
@@ -70,4 +76,4 @@ clean:
 	rm -f *.o libemqtt.a
 
 dist-clean: clean
-	rm -f $(CLIENT)/pub $(CLIENT)/sub $(CLIENT)/client.so
+	rm -f $(CLIENT)/pub $(CLIENT)/sub $(CLIENT)/libemqtt.so
