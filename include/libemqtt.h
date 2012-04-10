@@ -139,6 +139,22 @@
 	}																	\
 }
 
+/** Indicate if it is a duplicate packet.
+ * @param buffer Pointer to the packet.
+ *
+ * @retval   0 Not duplicate.
+ * @retval !=0 Duplicate.
+ */
+#define MQTTParseMessageDuplicate(buffer) ( *buffer & 0x08 )
+
+/** Indicate if this packet has a retain flag.
+ * @param buffer Pointer to the packet.
+ *
+ * @retval   0 Not duplicate.
+ * @retval !=0 Duplicate.
+ */
+#define MQTTParseMessageRetain(buffer) ( *buffer & 0x01 )
+
 
 
 typedef struct {
