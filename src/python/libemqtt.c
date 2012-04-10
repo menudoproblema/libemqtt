@@ -219,6 +219,24 @@ static PyTypeObject MqttType = {
 };
 
 // Module definition
+#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
+#define PyMODINIT_FUNC void
+#endif
+
+PyMODINIT_FUNC initclient(void)
+{
+	PyObject* m;
+
+	MqttType.tp_new = PyType_GenericNew;
+	if (PyType_Ready(&MqttType) < 0)
+		return;
+
+	m = Py_InitModule3("emqtt.libemqtt", Mqtt_methods, "Embedded MQTT library.");
+
+	Py_INCREF(&MqttType);
+	PyModule_AddObject(m, "Mqtt", (PyObject*)&MqttType);
+}
+
 /*
 static PyModuleDef moduledef = {
 	 PyModuleDef_HEAD_INIT,
@@ -231,25 +249,8 @@ static PyModuleDef moduledef = {
 	 NULL,		 // clear
 	 NULL
 };
-*/
-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
-#define PyMODINIT_FUNC void
-#endif
-PyMODINIT_FUNC initclient(void)
-{
-    PyObject* m;
 
-    MqttType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&MqttType) < 0)
-        return;
 
-    m = Py_InitModule3("emqtt.libemqtt", Mqtt_methods, "Embedded MQTT library.");
-
-    Py_INCREF(&MqttType);
-    PyModule_AddObject(m, "Mqtt", (PyObject*)&MqttType);
-}
-
-/*
 PyInit_emqtt(void)
 {
 	PyObject* mod; = (PyModule_Create(&moduledef);

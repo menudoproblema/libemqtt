@@ -43,6 +43,10 @@ python-libemqtt.o: $(SRC)/libemqtt.c $(INC)/libemqtt.h
 	$(CC) $(PYTHON_CCFLAGS) -c $(SRC)/libemqtt.c -o python-libemqtt.o
 
 
+python3:
+	@echo "Not yet available. Sorry!"
+
+
 
 
 
