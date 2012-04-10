@@ -101,19 +101,23 @@ PyObject* Mqtt_ping(MqttBroker* self)
 
 PyObject* Mqtt_publish(MqttBroker* self, PyObject* args, PyObject* kwargs)
 {
+	static char* kwlist[] = {"topic", "message", "retain", "qos", NULL};
+
+	char* topic = NULL;
+	char* message = NULL;
+	PyObject* retain = Py_False;
+	int qos = 0;
+	uint16_t message_id;
+
+	int result;
+
 	if(self->connected <= 0) // Not connected
 	{
 		// TODO: Exception
 		return NULL;
 	}
 
-	static char* kwlist[] = {"topic", "message", "retain", NULL};
-
-	char* topic = NULL;
-	char* message = NULL;
-	PyObject* retain = Py_False;
-
-	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "ss|O", kwlist, &topic, &message, &retain))
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "ss|Oi", kwlist, &topic, &message, &retain, &qos))
 	{
 		// TODO: Exception
 		return NULL;
@@ -124,7 +128,16 @@ PyObject* Mqtt_publish(MqttBroker* self, PyObject* args, PyObject* kwargs)
 		// TODO: Exception
 	}
 
-	return Py_BuildValue("i", mqtt_publish(&self->broker, topic, message, PyInt_AsLong(retain)));
+	if(qos < 0 || qos > 2)
+	{
+		// TODO: Exception
+	}
+
+	result = mqtt_publish_with_qos(&self->broker, topic, message, PyInt_AsLong(retain), qos, &message_id);
+	if(result > 0)
+		result = message_id;
+
+	return Py_BuildValue("i", result);
 }
 
 PyObject* Mqtt_subscribe(MqttBroker* self, PyObject* args, PyObject* kwargs)
@@ -223,7 +236,7 @@ static PyTypeObject MqttType = {
 #define PyMODINIT_FUNC void
 #endif
 
-PyMODINIT_FUNC initclient(void)
+PyMODINIT_FUNC initlibemqtt(void)
 {
 	PyObject* m;
 
@@ -231,10 +244,10 @@ PyMODINIT_FUNC initclient(void)
 	if (PyType_Ready(&MqttType) < 0)
 		return;
 
-	m = Py_InitModule3("emqtt.libemqtt", Mqtt_methods, "Embedded MQTT library.");
+	m = Py_InitModule3("emqtt.libemqtt", NULL, "Embedded MQTT library.");
 
 	Py_INCREF(&MqttType);
-	PyModule_AddObject(m, "Mqtt", (PyObject*)&MqttType);
+	PyModule_AddObject(m, "MQTT", (PyObject*)&MqttType);
 }
 
 /*
