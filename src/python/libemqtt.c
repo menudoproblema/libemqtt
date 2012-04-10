@@ -92,11 +92,13 @@ PyObject* Mqtt_disconnect(MqttBroker* self)
 
 PyObject* Mqtt_ping(MqttBroker* self)
 {
-	if(self->connected > 0)
+	if(self->connected <= 0) // Not connected
 	{
-		return Py_BuildValue("i", mqtt_ping(&self->broker));
+		// TODO: Exception
+		return NULL;
 	}
-	return Py_BuildValue("");
+
+	return Py_BuildValue("i", mqtt_ping(&self->broker));
 }
 
 PyObject* Mqtt_publish(MqttBroker* self, PyObject* args, PyObject* kwargs)
@@ -138,6 +140,27 @@ PyObject* Mqtt_publish(MqttBroker* self, PyObject* args, PyObject* kwargs)
 		result = message_id;
 
 	return Py_BuildValue("i", result);
+}
+
+PyObject* Mqtt_pubrel(MqttBroker* self, PyObject* args, PyObject* kwargs)
+{
+	static char* kwlist[] = {"msgid", NULL};
+
+	int message_id;
+
+	if(self->connected <= 0) // Not connected
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "i", kwlist, &message_id))
+	{
+		// TODO: Exception
+		return NULL;
+	}
+
+	return Py_BuildValue("i", mqtt_pubrel(&self->broker, message_id));
 }
 
 PyObject* Mqtt_subscribe(MqttBroker* self, PyObject* args, PyObject* kwargs)
@@ -184,6 +207,7 @@ static PyMethodDef Mqtt_methods[] = {
 	{ "disconnect", (PyCFunction) Mqtt_disconnect, METH_NOARGS, "MQTT disconnect." },
 	{ "ping", (PyCFunction) Mqtt_ping, METH_NOARGS, "MQTT ping." },
 	{ "publish", (PyCFunction) Mqtt_publish, METH_KEYWORDS, "MQTT publish." },
+	{ "pubrel", (PyCFunction) Mqtt_pubrel, METH_KEYWORDS, "MQTT pubrel." },
 	{ "subscribe", (PyCFunction) Mqtt_subscribe, METH_KEYWORDS, "MQTT subscribe." },
 
 	{ NULL }
@@ -192,7 +216,7 @@ static PyMethodDef Mqtt_methods[] = {
 static PyTypeObject MqttType = {
 	PyObject_HEAD_INIT(NULL)
 	0,											/* ob_size */
-	"emqtt.libemqtt.MQTT",						/* tp_name */
+	"libemqtt.MQTT",							/* tp_name */
 	sizeof(MqttBroker),							/* tp_basicsize */
 	0,											/* tp_itemsize */
 	(destructor)Mqtt_dealloc,					/* tp_dealloc */
@@ -244,10 +268,25 @@ PyMODINIT_FUNC initlibemqtt(void)
 	if (PyType_Ready(&MqttType) < 0)
 		return;
 
-	m = Py_InitModule3("emqtt.libemqtt", NULL, "Embedded MQTT library.");
+	m = Py_InitModule3("libemqtt", NULL, "Embedded MQTT library.");
 
 	Py_INCREF(&MqttType);
 	PyModule_AddObject(m, "MQTT", (PyObject*)&MqttType);
+
+	PyModule_AddIntConstant(m, "CONNECT", MQTT_MSG_CONNECT);
+	PyModule_AddIntConstant(m, "CONNACK", MQTT_MSG_CONNACK);
+	PyModule_AddIntConstant(m, "PUBLISH", MQTT_MSG_PUBLISH);
+	PyModule_AddIntConstant(m, "PUBACK", MQTT_MSG_PUBACK);
+	PyModule_AddIntConstant(m, "PUBREC", MQTT_MSG_PUBREC);
+	PyModule_AddIntConstant(m, "PUBREL", MQTT_MSG_PUBREL);
+	PyModule_AddIntConstant(m, "PUBCOMP", MQTT_MSG_PUBCOMP);
+	PyModule_AddIntConstant(m, "SUBSCRIBE", MQTT_MSG_SUBSCRIBE);
+	PyModule_AddIntConstant(m, "SUBACK", MQTT_MSG_SUBACK);
+	PyModule_AddIntConstant(m, "UNSUBSCRIBE", MQTT_MSG_UNSUBSCRIBE);
+	PyModule_AddIntConstant(m, "UNSUBACK", MQTT_MSG_UNSUBACK);
+	PyModule_AddIntConstant(m, "PINGREQ", MQTT_MSG_PINGREQ);
+	PyModule_AddIntConstant(m, "PINGRESP", MQTT_MSG_PINGRESP);
+	PyModule_AddIntConstant(m, "DISCONNECT", MQTT_MSG_DISCONNECT);
 }
 
 /*
