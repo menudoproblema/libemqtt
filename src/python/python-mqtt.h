@@ -33,6 +33,7 @@ typedef struct {
 	mqtt_broker_handle_t broker;
 } Mqtt;
 
+extern PyObject *ConnectionError;
 extern PyTypeObject MqttType;
 
 #endif // __LIBEMQTT_PYTHON_MQTT_H__

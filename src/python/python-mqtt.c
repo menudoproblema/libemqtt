@@ -23,6 +23,8 @@
 #include <python-mqtt.h>
 
 
+PyObject *ConnectionError;
+
 
 int send_packet(void* socket_info, const void* buf, unsigned int count)
 {
@@ -93,7 +95,7 @@ Mqtt_ping(Mqtt* self)
 {
 	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Custom exception
+		PyErr_SetString(ConnectionError, "Not connected");
 		return NULL;
 	}
 
@@ -120,7 +122,7 @@ Mqtt_publish(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Custom exception
+		PyErr_SetString(ConnectionError, "Not connected");
 		return NULL;
 	}
 
@@ -157,7 +159,7 @@ Mqtt_pubrel(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Custom exception
+		PyErr_SetString(ConnectionError, "Not connected");
 		return NULL;
 	}
 
@@ -180,7 +182,7 @@ Mqtt_subscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Custom exception
+		PyErr_SetString(ConnectionError, "Not connected");
 		return NULL;
 	}
 
@@ -205,7 +207,7 @@ Mqtt_unsubscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Custom exception
+		PyErr_SetString(ConnectionError, "Not connected");
 		return NULL;
 	}
 

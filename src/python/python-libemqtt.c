@@ -24,7 +24,6 @@
 #include <python-mqtt_packet.h>
 
 
-
 // Module definition
 #ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
@@ -65,7 +64,9 @@ PyMODINIT_FUNC initlibemqtt(void)
 	PyModule_AddIntConstant(m, "PINGRESP", MQTT_MSG_PINGRESP);
 	PyModule_AddIntConstant(m, "DISCONNECT", MQTT_MSG_DISCONNECT);
 
-	PyModule_AddObject(m, "ConnectionError", PyErr_NewException("libemqtt.Mqtt", NULL, NULL));
+	ConnectionError = PyErr_NewException("libemqtt.ConnectionError", NULL, NULL);
+	Py_INCREF(ConnectionError);
+	PyModule_AddObject(m, "ConnectionError", ConnectionError);
 }
 
 /*
