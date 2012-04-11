@@ -35,11 +35,11 @@ PyMODINIT_FUNC initlibemqtt(void)
 	PyObject* m;
 
 	MqttType.tp_new = PyType_GenericNew;
-	if (PyType_Ready(&MqttType) < 0)
+	if(PyType_Ready(&MqttType) < 0)
 		return;
 
 	MqttPacketType.tp_new = PyType_GenericNew;
-	if (PyType_Ready(&MqttPacketType) < 0)
+	if(PyType_Ready(&MqttPacketType) < 0)
 		return;
 
 	m = Py_InitModule3("libemqtt", NULL, "Embedded MQTT library.");
@@ -64,6 +64,8 @@ PyMODINIT_FUNC initlibemqtt(void)
 	PyModule_AddIntConstant(m, "PINGREQ", MQTT_MSG_PINGREQ);
 	PyModule_AddIntConstant(m, "PINGRESP", MQTT_MSG_PINGRESP);
 	PyModule_AddIntConstant(m, "DISCONNECT", MQTT_MSG_DISCONNECT);
+
+	PyModule_AddObject(m, "ConnectionError", PyErr_NewException("libemqtt.Mqtt", NULL, NULL));
 }
 
 /*
