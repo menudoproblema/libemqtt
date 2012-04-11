@@ -48,9 +48,10 @@ Mqtt_init(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "O|sssi", kwlist, &self->socket, &clientid, &username, &password, &keepalive))
 	{
-		// TODO: Exception
 		return NULL;
 	}
+
+	// TODO: check the first argument. It must be a socket
 
 	mqtt_init(&self->broker, clientid);
 	mqtt_init_auth(&self->broker, username, password);
@@ -92,7 +93,7 @@ Mqtt_ping(Mqtt* self)
 {
 	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Exception
+		// TODO: Custom exception
 		return NULL;
 	}
 
@@ -104,34 +105,35 @@ Mqtt_publish(Mqtt* self, PyObject* args, PyObject* kwargs)
 {
 	static char* kwlist[] = {"topic", "message", "retain", "qos", NULL};
 
-	char* topic = NULL;
-	char* message = NULL;
-	PyObject* retain = Py_False;
-	int qos = 0;
+	char* topic = NULL; // Required
+	char* message = NULL; // Required
+	PyObject* retain = Py_False; // By default
+	int qos = 0; // By default
 	uint16_t message_id;
 
 	int result;
 
-	if(self->connected <= 0) // Not connected
-	{
-		// TODO: Exception
-		return NULL;
-	}
-
 	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "ss|Oi", kwlist, &topic, &message, &retain, &qos))
 	{
-		// TODO: Exception
 		return NULL;
 	}
 
-	if(!PyBool_Check(retain))
+	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Exception
+		// TODO: Custom exception
+		return NULL;
+	}
+
+	if(!PyBool_Check(retain) && !PyInt_Check(retain))
+	{
+		PyErr_SetString(PyExc_TypeError, "Retain must be bool or integer");
+		return NULL;
 	}
 
 	if(qos < 0 || qos > 2)
 	{
-		// TODO: Exception
+		PyErr_SetString(PyExc_TypeError, "QoS out of range");
+		return NULL;
 	}
 
 	result = mqtt_publish_with_qos(&self->broker, topic, message, PyInt_AsLong(retain), qos, &message_id);
@@ -148,15 +150,14 @@ Mqtt_pubrel(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	int message_id;
 
-	if(self->connected <= 0) // Not connected
+	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "i", kwlist, &message_id))
 	{
-		// TODO: Exception
 		return NULL;
 	}
 
-	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "i", kwlist, &message_id))
+	if(self->connected <= 0) // Not connected
 	{
-		// TODO: Exception
+		// TODO: Custom exception
 		return NULL;
 	}
 
@@ -166,12 +167,6 @@ Mqtt_pubrel(Mqtt* self, PyObject* args, PyObject* kwargs)
 static PyObject*
 Mqtt_subscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 {
-	if(self->connected <= 0) // Not connected
-	{
-		// TODO: Exception
-		return NULL;
-	}
-
 	static char* kwlist[] = {"topic", NULL};
 
 	int result;
@@ -180,36 +175,37 @@ Mqtt_subscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &topic))
 	{
-		// TODO: Exception
+		return NULL;
+	}
+
+	if(self->connected <= 0) // Not connected
+	{
+		// TODO: Custom exception
 		return NULL;
 	}
 
 	result = mqtt_subscribe(&self->broker, topic, &msg_id);
-	if(result <= 0)
-	{
-		// TODO: Exception
-		return NULL;
-	}
+	if(result > 0)
+		result = msg_id;
 
-	return Py_BuildValue("i", msg_id);
+	return Py_BuildValue("i", result);
 }
 
 static PyObject*
 Mqtt_unsubscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 {
-	if(self->connected <= 0) // Not connected
-	{
-		// TODO: Exception
-		return NULL;
-	}
-
 	static char* kwlist[] = {"topic", NULL};
 
 	char* topic = NULL;
 
 	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &topic))
 	{
-		// TODO: Exception
+		return NULL;
+	}
+
+	if(self->connected <= 0) // Not connected
+	{
+		// TODO: Custom exception
 		return NULL;
 	}
 
