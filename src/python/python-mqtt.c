@@ -219,6 +219,7 @@ Mqtt_dealloc(Mqtt* self)
 	{
 		Mqtt_disconnect(self);
 	}
+	Py_XDECREF(self->socket);
 	self->ob_type->tp_free((PyObject*)self);
 }
 
