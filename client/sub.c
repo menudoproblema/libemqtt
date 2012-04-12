@@ -157,7 +157,8 @@ int main()
 	int packet_length;
 	uint16_t msg_id, msg_id_rcv;
 
-	mqtt_init(&broker, "libemqtt sub");
+	mqtt_init(&broker, "sancho");
+	mqtt_init_auth(&broker, "quijote", "rocinante");
 	init_socket(&broker, "192.168.10.40", 1883, keepalive);
 
 	// >>>>> CONNECT

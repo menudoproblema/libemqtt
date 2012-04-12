@@ -139,8 +139,8 @@ int main(int argc, char* argv[])
 	uint16_t msg_id, msg_id_rcv;
 	mqtt_broker_handle_t broker;
 
-	mqtt_init(&broker, "libemqtt pub");
-	mqtt_init_auth(&broker, "username", NULL);
+	mqtt_init(&broker, "avengalvon");
+	mqtt_init_auth(&broker, "cid", "campeador");
 	init_socket(&broker, "192.168.10.40", 1883);
 
 	// >>>>> CONNECT
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
 	// >>>>> PUBLISH QoS 2
 	printf("Publish: QoS 2\n");
 	mqtt_publish_with_qos(&broker, "hello/emqtt", "Example: QoS 2", 1, 2, &msg_id); // Retain
-	// <<<<< PUBACK
+	// <<<<< PUBREC
 	packet_length = read_packet(1);
 	if(packet_length < 0)
 	{

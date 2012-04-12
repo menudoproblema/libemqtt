@@ -16,11 +16,12 @@ def read(sck, timeout=None):
 
     if sck in inputready:
         fix_header = sck.recv(2)
-        remain = ord(fix_header[1])
+        if len(fix_header):
+            remain = ord(fix_header[1])
 
-        data = sck.recv(remain)
+            data = sck.recv(remain)
 
-        return libemqtt.MqttPacket(fix_header + data)
+            return libemqtt.MqttPacket(fix_header + data)
     return None
 
 
@@ -29,7 +30,7 @@ PORT = 1883
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
 
-client = libemqtt.Mqtt(s, clientid='cid', username='campeador', password='rodrigo', keepalive=5)
+client = libemqtt.Mqtt(s, clientid='sancho', username='quijote', password='rocinante', keepalive=5)
 
 def alive_callback(client):
     def alive(signum, frame):
