@@ -30,6 +30,7 @@ typedef struct {
 	PyObject_HEAD
 	PyObject* socket;
 	short connected; // < 1 means not connected
+	int keepalive;
 	mqtt_broker_handle_t broker;
 } Mqtt;
 
