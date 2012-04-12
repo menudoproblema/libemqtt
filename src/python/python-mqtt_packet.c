@@ -31,7 +31,6 @@ MqttPacket_init(MqttPacket* self, PyObject* args, PyObject* kwargs)
 
 	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "S", kwlist, &self->data))
 	{
-		// TODO: Exception
 		return NULL;
 	}
 	const char* data = PyString_AS_STRING(self->data);
@@ -45,7 +44,54 @@ MqttPacket_init(MqttPacket* self, PyObject* args, PyObject* kwargs)
 		self->retain = Py_True;
 	MQTTParseMessageId(data, self->message_id);
 
-	return Py_BuildValue("");
+	Py_RETURN_NONE;
+}
+
+static PyObject*
+MqttPacket_index(MqttPacket* self, PyObject* args)
+{
+	int index;
+
+	if(!PyArg_ParseTuple(args, "i", &index))
+	{
+		return NULL;
+	}
+
+	if(index < 0 || index >= PyString_Size(self->data))
+	{
+		PyErr_SetString(PyExc_IndexError, "index out of range");
+		return NULL;
+	}
+
+	char* data = PyString_AS_STRING(self->data);
+
+	return Py_BuildValue("i", data[index]);
+}
+
+static PyObject*
+MqttPacket_get_message(MqttPacket* self)
+{
+	if(self->type == MQTT_MSG_PUBLISH)
+	{
+		int len;
+		char* ptr;
+		char* data = PyString_AS_STRING(self->data);
+
+		MQTTParsePublishMessagePtr(data, ptr, len);
+		if(ptr == NULL)
+		{
+			Py_RETURN_NONE;
+		}
+
+		PyObject* message = PyString_FromStringAndSize(ptr, len); // New reference
+		if(message == NULL)
+		{
+			return NULL;
+		}
+
+		return message;
+	}
+	Py_RETURN_NONE;
 }
 
 static void
@@ -65,6 +111,9 @@ static PyMemberDef MqttPacket_members[] = {
 };
 
 static PyMethodDef MqttPacket_methods[] = {
+	{ "index", (PyCFunction) MqttPacket_index, METH_VARARGS, "Get a byte from the packet." },
+	{ "get_message", (PyCFunction) MqttPacket_get_message, METH_NOARGS, "Get the message from a publish packet." },
+
 	{ NULL }
 };
 
