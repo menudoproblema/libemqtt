@@ -65,33 +65,51 @@ MqttPacket_index(MqttPacket* self, PyObject* args)
 
 	char* data = PyString_AS_STRING(self->data);
 
-	return Py_BuildValue("i", data[index]);
+	return Py_BuildValue("i", (uint8_t)data[index]);
+}
+
+static PyObject*
+MqttPacket_get_topic(MqttPacket* self)
+{
+	int len;
+	char* ptr;
+	char* data = PyString_AS_STRING(self->data);
+
+	MQTTParsePublishTopicPtr(data, ptr, len);
+	if(ptr == NULL)
+	{
+		Py_RETURN_NONE;
+	}
+
+	PyObject* message = PyString_FromStringAndSize(ptr, len); // New reference
+	if(message == NULL)
+	{
+		return NULL;
+	}
+
+	return message;
 }
 
 static PyObject*
 MqttPacket_get_message(MqttPacket* self)
 {
-	if(self->type == MQTT_MSG_PUBLISH)
+	int len;
+	char* ptr;
+	char* data = PyString_AS_STRING(self->data);
+
+	MQTTParsePublishMessagePtr(data, ptr, len);
+	if(ptr == NULL)
 	{
-		int len;
-		char* ptr;
-		char* data = PyString_AS_STRING(self->data);
-
-		MQTTParsePublishMessagePtr(data, ptr, len);
-		if(ptr == NULL)
-		{
-			Py_RETURN_NONE;
-		}
-
-		PyObject* message = PyString_FromStringAndSize(ptr, len); // New reference
-		if(message == NULL)
-		{
-			return NULL;
-		}
-
-		return message;
+		Py_RETURN_NONE;
 	}
-	Py_RETURN_NONE;
+
+	PyObject* message = PyString_FromStringAndSize(ptr, len); // New reference
+	if(message == NULL)
+	{
+		return NULL;
+	}
+
+	return message;
 }
 
 static void
@@ -101,17 +119,18 @@ MqttPacket_dealloc(MqttPacket* self)
 }
 
 static PyMemberDef MqttPacket_members[] = {
-	{"type", T_INT, offsetof(MqttPacket, type), 0, "Packet type"},
-	{"qos", T_INT, offsetof(MqttPacket, qos), 0, "Quality of Service"},
-	{"duplicate", T_OBJECT_EX, offsetof(MqttPacket, duplicate), 0, "Duplicate flag"},
-	{"retain", T_OBJECT_EX, offsetof(MqttPacket, retain), 0, "Retain flag"},
-	{"message_id", T_INT, offsetof(MqttPacket, message_id), 0, "Message ID"},
+	{"type", T_INT, offsetof(MqttPacket, type), 0, "Packet type."},
+	{"qos", T_INT, offsetof(MqttPacket, qos), 0, "Quality of Service."},
+	{"duplicate", T_OBJECT_EX, offsetof(MqttPacket, duplicate), 0, "Duplicate flag."},
+	{"retain", T_OBJECT_EX, offsetof(MqttPacket, retain), 0, "Retain flag."},
+	{"message_id", T_INT, offsetof(MqttPacket, message_id), 0, "Message ID."},
 
 	{ NULL }
 };
 
 static PyMethodDef MqttPacket_methods[] = {
 	{ "index", (PyCFunction) MqttPacket_index, METH_VARARGS, "Get a byte from the packet." },
+	{ "get_topic", (PyCFunction) MqttPacket_get_topic, METH_NOARGS, "Get the topic from a publish packet." },
 	{ "get_message", (PyCFunction) MqttPacket_get_message, METH_NOARGS, "Get the message from a publish packet." },
 
 	{ NULL }
