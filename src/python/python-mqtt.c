@@ -63,6 +63,7 @@ Mqtt_init(Mqtt* self, PyObject* args, PyObject* kwargs)
 	self->broker.send = send_packet;
 
 	self->connected = 0;
+	self->keepalive = keepalive;
 
 	Py_RETURN_NONE;
 }
@@ -226,6 +227,8 @@ Mqtt_dealloc(Mqtt* self)
 }
 
 static PyMemberDef Mqtt_members[] = {
+	{"keepalive", T_INT, offsetof(Mqtt, keepalive), 0, "Keep alive timer."},
+
 	{ NULL }
 };
 
