@@ -130,10 +130,34 @@
  * @return None.
  */
 #define MQTTParsePublishTopic(buffer, topic, len) {						\
+	uint8_t* ptr;														\
+	MQTTParsePublishTopicPtr(buffer, ptr, len);							\
+	if(ptr != NULL)														\
+	{																	\
+		memcpy(topic, ptr, len);										\
+	}																	\
+}
+
+/** Point at the topic from a publish message.
+ * If the packet is not a publish message, this macro has no effect and
+ * ``len`` is set to 0 and ``ptr`` to NULL.
+ * @param buffer Pointer to the packet.
+ * @param ptr Pointer that will point at the begining of the topic in
+ *        the buffer.
+ * @param len This variable will store the length of the topic.
+ *
+ * @return None.
+ */
+#define MQTTParsePublishTopicPtr(buffer, topic, len) {					\
 	if(MQTTParseMessageType(buffer) == MQTT_MSG_PUBLISH)				\
 	{																	\
 		len = *(buffer+2)<<8; len |= *(buffer+3);						\
-		memcpy(topic, (buffer + 4), len);								\
+		ptr = (buffer + 4);												\
+	}																	\
+	else																\
+	{																	\
+		ptr = NULL;														\
+		len = 0;														\
 	}																	\
 }
 
@@ -151,7 +175,7 @@
 	MQTTParsePublishMessagePtr(buffer, ptr, len);						\
 	if(ptr != NULL)														\
 	{																	\
-		memcpy(msg, ptr, len);							\
+		memcpy(msg, ptr, len);											\
 	}																	\
 }
 
@@ -159,8 +183,8 @@
  * If the packet is not a publish message, this macro has no effect and
  * ``len`` is set to 0 and ``ptr`` to NULL.
  * @param buffer Pointer to the packet.
- * @param ptr Pointer that will point at the begining of message in the
- *        buffer.
+ * @param ptr Pointer that will point at the begining of the message in
+ *        the buffer.
  * @param len This variable will store the length of the message.
  *
  * @return None.
