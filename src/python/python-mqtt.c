@@ -64,7 +64,7 @@ Mqtt_init(Mqtt* self, PyObject* args, PyObject* kwargs)
 
 	self->connected = 0;
 
-	return Py_BuildValue("");
+	Py_RETURN_NONE;
 }
 
 static PyObject*
@@ -75,7 +75,7 @@ Mqtt_connect(Mqtt* self)
 		self->connected = mqtt_connect(&self->broker);
 		return Py_BuildValue("b", self->connected);
 	}
-	return Py_BuildValue("b", Py_False);
+	Py_RETURN_FALSE;
 }
 
 static PyObject*
@@ -87,7 +87,7 @@ Mqtt_disconnect(Mqtt* self)
 		self->connected = 0;
 		return Py_BuildValue("i", result);
 	}
-	return Py_BuildValue("");
+	Py_RETURN_NONE;
 }
 
 static PyObject*
