@@ -224,14 +224,13 @@ int main()
 			printf("Packet Header: 0x%x...\n", packet_buffer[0]);
 			if(MQTTParseMessageType(packet_buffer) == MQTT_MSG_PUBLISH)
 			{
-				char buf[255];
+				char topic[255], msg[255];
 				int len;
-				MQTTParsePublishTopic(packet_buffer, buf, len);
-				buf[len] = '\0'; // for printf
-				printf("Topic: %s, len: %d\n", buf, len);
-				MQTTParsePublishMessage(packet_buffer, buf, len);
-				buf[len] = '\0'; // for printf
-				printf("Message: %s, len: %d\n", buf, len);
+				MQTTParsePublishTopic(packet_buffer, topic, len);
+				topic[len] = '\0'; // for printf
+				MQTTParsePublishMessage(packet_buffer, msg, len);
+				msg[len] = '\0'; // for printf
+				printf("%s %s\n", topic, msg);
 			}
 		}
 
