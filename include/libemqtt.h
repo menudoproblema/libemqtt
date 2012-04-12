@@ -62,6 +62,36 @@
  */
 #define MQTTParseMessageType(buffer) ( *buffer & 0xF0 )
 
+/** Indicate if it is a duplicate packet.
+ * @param buffer Pointer to the packet.
+ *
+ * @retval   0 Not duplicate.
+ * @retval !=0 Duplicate.
+ */
+#define MQTTParseMessageDuplicate(buffer) ( *buffer & 0x08 )
+
+/** Extract the message QoS level.
+ * @param buffer Pointer to the packet.
+ *
+ * @return QoS Level (0, 1 or 2).
+ */
+#define MQTTParseMessageQos(buffer) ( (*buffer & 0x06) >> 1 )
+
+/** Indicate if this packet has a retain flag.
+ * @param buffer Pointer to the packet.
+ *
+ * @retval   0 Not duplicate.
+ * @retval !=0 Duplicate.
+ */
+#define MQTTParseMessageRetain(buffer) ( *buffer & 0x01 )
+
+/** Indicate the remaining length.
+ * @param buffer Pointer to the packet.
+ *
+ * @return Remaining length.
+ */
+#define MQTTParseMessageRemaininLength(buffer) ( buffer[1] )
+
 /** Extract the message id from buffer.
  * @param buffer Pointer to the packet.
  * @param id This variable will store the message id. If the message has
@@ -91,13 +121,6 @@
 	}																	\
 }
 
-/** Extract the message QoS level.
- * @param buffer Pointer to the packet.
- *
- * @return QoS Level (0, 1 or 2).
- */
-#define MQTTParseMessageQos(buffer) ( (*buffer & 0x06) >> 1 )
-
 /** Extract the topic from a publish message.
  * If the packet is not a publish message, this macro has no effect.
  * @param buffer Pointer to the packet.
@@ -115,7 +138,8 @@
 }
 
 /** Extract the message from a publish message.
- * If the packet is not a publish message, this macro has no effect.
+ * If the packet is not a publish message, this macro has no effect and
+ * ``len`` is set to 0.
  * @param buffer Pointer to the packet.
  * @param msg Buffer where the message will be copied.
  * @param len This variable will store the length of the message.
@@ -123,6 +147,25 @@
  * @return None.
  */
 #define MQTTParsePublishMessage(buffer, msg, len) {						\
+	uint8_t* ptr;														\
+	MQTTParsePublishMessagePtr(buffer, ptr, len);						\
+	if(ptr != NULL)														\
+	{																	\
+		memcpy(msg, ptr, len);							\
+	}																	\
+}
+
+/** Point at the message from a publish message.
+ * If the packet is not a publish message, this macro has no effect and
+ * ``len`` is set to 0 and ``ptr`` to NULL.
+ * @param buffer Pointer to the packet.
+ * @param ptr Pointer that will point at the begining of message in the
+ *        buffer.
+ * @param len This variable will store the length of the message.
+ *
+ * @return None.
+ */
+#define MQTTParsePublishMessagePtr(buffer, ptr, len) {					\
 	if(MQTTParseMessageType(buffer) == MQTT_MSG_PUBLISH)				\
 	{																	\
 		/* Offset: Topic length */										\
@@ -132,28 +175,17 @@
 		/* Offset: QoS */												\
 		if(MQTTParseMessageQos(buffer)) offset += 2;					\
 		/* Length of the message */										\
-		len = buffer[1] - offset;										\
+		len = MQTTParseMessageRemaininLength(buffer) - offset;			\
 		/* Offset: Fixed header */										\
 		offset += 2;													\
-		memcpy(msg, (buffer + offset), len);							\
+		ptr = (buffer + offset);										\
+	}																	\
+	else																\
+	{																	\
+		ptr = NULL;														\
+		len = 0;														\
 	}																	\
 }
-
-/** Indicate if it is a duplicate packet.
- * @param buffer Pointer to the packet.
- *
- * @retval   0 Not duplicate.
- * @retval !=0 Duplicate.
- */
-#define MQTTParseMessageDuplicate(buffer) ( *buffer & 0x08 )
-
-/** Indicate if this packet has a retain flag.
- * @param buffer Pointer to the packet.
- *
- * @retval   0 Not duplicate.
- * @retval !=0 Duplicate.
- */
-#define MQTTParseMessageRetain(buffer) ( *buffer & 0x01 )
 
 
 
