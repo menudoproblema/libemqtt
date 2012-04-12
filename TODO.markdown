@@ -7,4 +7,4 @@
 
 # Python binding
 
-> Under development
+* Remaining Length from C Library
