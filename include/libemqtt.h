@@ -327,12 +327,13 @@ int mqtt_subscribe(mqtt_broker_handle_t* broker, const char* topic, uint16_t* me
 /** Unsubscribe from a topic.
  * @param broker Data structure that contains the connection information with the broker.
  * @param topic The topic name.
+ * @param message_id Variable that will store the Message ID, if the pointer is not NULL.
  *
  * @retval  1 On success.
  * @retval  0 On connection error.
  * @retval -1 On IO error.
  */
-int mqtt_unsubscribe(mqtt_broker_handle_t* broker, const char* topic);
+int mqtt_unsubscribe(mqtt_broker_handle_t* broker, const char* topic, uint16_t* message_id);
 
 /** Make a ping.
  * @param broker Data structure that contains the connection information with the broker.

@@ -199,7 +199,9 @@ Mqtt_unsubscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 {
 	static char* kwlist[] = {"topic", NULL};
 
+	int result;
 	char* topic = NULL;
+	uint16_t msg_id;
 
 	if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &topic))
 	{
@@ -212,7 +214,11 @@ Mqtt_unsubscribe(Mqtt* self, PyObject* args, PyObject* kwargs)
 		return NULL;
 	}
 
-	return Py_BuildValue("i", mqtt_unsubscribe(&self->broker, topic));
+	result = mqtt_unsubscribe(&self->broker, topic, &msg_id);
+	if(result > 0)
+		result = msg_id;
+
+	return Py_BuildValue("i", result);
 }
 
 static void
