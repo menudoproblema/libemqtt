@@ -85,139 +85,79 @@
  */
 #define MQTTParseMessageRetain(buffer) ( *buffer & 0x01 )
 
-/** Indicate the remaining length.
- * @param buffer Pointer to the packet.
- *
- * @return Remaining length.
- */
-#define MQTTParseMessageRemaininLength(buffer) ( buffer[1] )
 
-/** Extract the message id from buffer.
- * @param buffer Pointer to the packet.
- * @param id This variable will store the message id. If the message has
- *        not Message ID, it will set to 0.
+/** Parse packet buffer for number of bytes in remaining length field.
  *
- * @return None.
- */
-#define MQTTParseMessageId(buffer, id) {								\
-	uint8_t type = MQTTParseMessageType(buffer);						\
-	uint8_t qos = MQTTParseMessageQos(buffer);							\
-	id = 0;																\
-	if(type >= MQTT_MSG_PUBLISH && type <= MQTT_MSG_UNSUBACK)			\
-	{																	\
-		if(type == MQTT_MSG_PUBLISH)									\
-		{																\
-			if(qos != 0)												\
-			{															\
-				uint8_t offset = *(buffer+2)<<8; offset |= *(buffer+3);	\
-				offset += 4; /* Fixed header + Topic utf8-encoded */	\
-				/* Fixed header length + Topic utf8-encoded */			\
-				id = *(buffer+offset)<<8; id |= *(buffer+offset+1);		\
-			}															\
-		}																\
-		else															\
-			/* Fixed header length */									\
-			id = *(buffer+2)<<8; id |= *(buffer+3);						\
-	}																	\
-}
-
-/** Extract the topic from a publish message.
- * If the packet is not a publish message, this macro has no effect.
- * @param buffer Pointer to the packet.
- * @param topic Buffer where the topic will be copied.
- * @param len This variable will store the length of the topic.
+ * Given a packet, return number of bytes in remaining length
+ * field in MQTT fixed header.  Can be from 1 - 4 bytes depending
+ * on length of message.
  *
- * @return None.
- */
-#define MQTTParsePublishTopic(buffer, topic, len) {						\
-	uint8_t* ptr;														\
-	MQTTParsePublishTopicPtr(buffer, ptr, len);							\
-	if(ptr != NULL)														\
-	{																	\
-		memcpy(topic, ptr, len);										\
-	}																	\
-}
-
-/** Point at the topic from a publish message.
- * If the packet is not a publish message, this macro has no effect and
- * ``len`` is set to 0 and ``ptr`` to NULL.
- * @param buffer Pointer to the packet.
- * @param ptr Pointer that will point at the begining of the topic in
- *        the buffer.
- * @param len This variable will store the length of the topic.
+ * @param buf Pointer to the packet.
  *
- * @return None.
+ * @retval number of bytes
  */
-#define MQTTParsePublishTopicPtr(buffer, topic, len) {					\
-	if(MQTTParseMessageType(buffer) == MQTT_MSG_PUBLISH)				\
-	{																	\
-		len = *(buffer+2)<<8; len |= *(buffer+3);						\
-		ptr = (buffer + 4);												\
-	}																	\
-	else																\
-	{																	\
-		ptr = NULL;														\
-		len = 0;														\
-	}																	\
-}
+uint8_t mqtt_num_rem_len_bytes(const uint8_t* buf);
 
-/** Extract the message from a publish message.
- * If the packet is not a publish message, this macro has no effect and
- * ``len`` is set to 0.
- * @param buffer Pointer to the packet.
- * @param msg Buffer where the message will be copied.
- * @param len This variable will store the length of the message.
+/** Parse packet buffer for remaning length value.
  *
- * @return None.
- */
-#define MQTTParsePublishMessage(buffer, msg, len) {						\
-	uint8_t* ptr;														\
-	MQTTParsePublishMessagePtr(buffer, ptr, len);						\
-	if(ptr != NULL)														\
-	{																	\
-		memcpy(msg, ptr, len);											\
-	}																	\
-}
-
-/** Point at the message from a publish message.
- * If the packet is not a publish message, this macro has no effect and
- * ``len`` is set to 0 and ``ptr`` to NULL.
- * @param buffer Pointer to the packet.
- * @param ptr Pointer that will point at the begining of the message in
- *        the buffer.
- * @param len This variable will store the length of the message.
+ * Given a packet, return remaining length value (in fixed header).
+ * 
+ * @param buf Pointer to the packet.
  *
- * @return None.
+ * @retval remaining length
  */
-#define MQTTParsePublishMessagePtr(buffer, ptr, len) {					\
-	if(MQTTParseMessageType(buffer) == MQTT_MSG_PUBLISH)				\
-	{																	\
-		/* Offset: Topic length */										\
-		uint8_t offset = *(buffer+2)<<8; offset |= *(buffer+3);			\
-		/* Offset: 2 bytes of topic length */							\
-		offset += 2;													\
-		/* Offset: QoS */												\
-		if(MQTTParseMessageQos(buffer)) offset += 2;					\
-		/* Length of the message */										\
-		len = MQTTParseMessageRemaininLength(buffer) - offset;			\
-		/* Offset: Fixed header */										\
-		offset += 2;													\
-		ptr = (buffer + offset);										\
-	}																	\
-	else																\
-	{																	\
-		ptr = NULL;														\
-		len = 0;														\
-	}																	\
-}
+uint16_t mqtt_parse_rem_len(const uint8_t* buf);
 
+/** Parse packet buffer for message id.
+ *
+ * @param buf Pointer to the packet.
+ *
+ * @retval message id
+ */
+uint8_t mqtt_parse_msg_id(const uint8_t* buf);
+
+/** Parse a packet buffer for the publish topic.
+ *
+ * Given a packet containing an MQTT publish message,
+ * return the message topic.
+ *
+ * @param buf Pointer to the packet.
+ * @param topic  Pointer destination buffer for topic
+ *
+ * @retval size in bytes of topic (0 = no publish message in buffer)
+ */
+uint16_t mqtt_parse_pub_topic(const uint8_t* buf, uint8_t* topic);
+
+/** Parse a packet buffer for a pointer to the publish topic.
+ *
+ *  Not called directly - called by mqtt_parse_pub_topic
+ */
+uint16_t mqtt_parse_pub_topic_ptr(const uint8_t* buf, const uint8_t** topic_ptr);
+
+/** Parse a packet buffer for the publish message.
+ *
+ * Given a packet containing an MQTT publish message,
+ * return the message.
+ *
+ * @param buf Pointer to the packet.
+ * @param msg Pointer destination buffer for message
+ *
+ * @retval size in bytes of topic (0 = no publish message in buffer)
+ */
+uint16_t mqtt_parse_publish_msg(const uint8_t* buf, uint8_t* msg);
+
+/** Parse a packet buffer for a pointer to the publish message.
+ *
+ *  Not called directly - called by mqtt_parse_pub_msg
+ */
+uint16_t mqtt_parse_pub_msg_ptr(const uint8_t* buf, const uint8_t** msg_ptr);
 
 
 typedef struct {
 	void* socket_info;
 	int (*send)(void* socket_info, const void* buf, unsigned int count);
 	// Connection info
-	char clientid[24];
+	char clientid[50];
 	// Auth fields
 	char username[MQTT_CONF_USERNAME_LENGTH];
 	char password[MQTT_CONF_PASSWORD_LENGTH];
@@ -229,7 +169,6 @@ typedef struct {
 	uint16_t seq;
 	uint16_t alive;
 } mqtt_broker_handle_t;
-
 
 
 /** Initialize the information to connect to the broker.
