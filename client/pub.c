@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
 	mqtt_init(&broker, "avengalvon");
 	mqtt_init_auth(&broker, "cid", "campeador");
-	init_socket(&broker, "192.168.10.40", 1883);
+	init_socket(&broker, "127.0.0.1", 1883);
 
 	// >>>>> CONNECT
 	mqtt_connect(&broker);
