@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
 	mqtt_init(&broker, "avengalvon");
 	mqtt_init_auth(&broker, "cid", "campeador");
-	init_socket(&broker, "192.168.10.40", 1883);
+	init_socket(&broker, "127.0.0.1", 1883);
 
 	// >>>>> CONNECT
 	mqtt_connect(&broker);
@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
 		return -2;
 	}
 
-	MQTTParseMessageId(packet_buffer, msg_id_rcv);
+	msg_id_rcv = mqtt_parse_msg_id(packet_buffer);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
 		return -2;
 	}
 
-	MQTTParseMessageId(packet_buffer, msg_id_rcv);
+	msg_id_rcv = mqtt_parse_msg_id(packet_buffer);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
 		return -2;
 	}
 
-	MQTTParseMessageId(packet_buffer, msg_id_rcv);
+	msg_id_rcv = mqtt_parse_msg_id(packet_buffer);
 	if(msg_id != msg_id_rcv)
 	{
 		fprintf(stderr, "%d message id was expected, but %d message id was found!\n", msg_id, msg_id_rcv);
