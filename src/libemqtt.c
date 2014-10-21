@@ -78,10 +78,10 @@ uint16_t mqtt_parse_rem_len(const uint8_t* buf) {
 	return value;
 }
 
-uint8_t mqtt_parse_msg_id(const uint8_t* buf) {
+uint16_t mqtt_parse_msg_id(const uint8_t* buf) {
 	uint8_t type = MQTTParseMessageType(buf);
 	uint8_t qos = MQTTParseMessageQos(buf);
-	uint8_t id = 0;
+	uint16_t id = 0;
 	
 	//printf("mqtt_parse_msg_id\n");
 	
