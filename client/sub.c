@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <linux/tcp.h>
+#include <netinet/tcp.h>
 #include <signal.h>
 
 
@@ -202,7 +202,7 @@ int main()
 	signal(SIGINT, term);
 
 	// >>>>> SUBSCRIBE
-	mqtt_subscribe(&broker, "public/test/topic", &msg_id);
+	mqtt_subscribe(&broker, "hello/emqtt", &msg_id);
 	// <<<<< SUBACK
 	packet_length = read_packet(1);
 	if(packet_length < 0)

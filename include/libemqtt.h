@@ -114,7 +114,7 @@ uint16_t mqtt_parse_rem_len(const uint8_t* buf);
  *
  * @retval message id
  */
-uint8_t mqtt_parse_msg_id(const uint8_t* buf);
+uint16_t mqtt_parse_msg_id(const uint8_t* buf);
 
 /** Parse a packet buffer for the publish topic.
  *
@@ -162,6 +162,8 @@ typedef struct {
 	char username[MQTT_CONF_USERNAME_LENGTH];
 	char password[MQTT_CONF_PASSWORD_LENGTH];
 	// Will topic
+	const char *will_topic;
+	const char *will_msg;
 	uint8_t will_retain;
 	uint8_t will_qos;
 	uint8_t clean_session;
@@ -187,6 +189,13 @@ void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid);
  * @note Only has effect before to call mqtt_connect
  */
 void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const char* password);
+
+/** Add a last will and testament message if the client disconnects without warning
+* @param broker Data structure that contains the connection information with the broker.
+* @param A pointer to a topic, the application is responsible for maintaining a const static char array throughout it's lifecycle
+* @param A pointer to the message, the application is responsible for maintaining a const static char array throughout it's lifecycle
+*/
+void mqtt_init_will(mqtt_broker_handle_t* broker, const char * topic, const char *msg, uint8_t qos, uint8_t retain);
 
 /** Set the keep alive timer.
  * @param broker Data structure that contains the connection information with the broker.

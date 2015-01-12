@@ -28,7 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <linux/tcp.h>
+#include <netinet/tcp.h>
 
 
 #define RCVBUFSIZE 1024
@@ -131,7 +131,8 @@ int read_packet(int timeout)
 
 
 
-
+static char *will_msg = "I Died\n";
+static char *will_topic = "response";
 
 int main(int argc, char* argv[])
 {
@@ -140,7 +141,8 @@ int main(int argc, char* argv[])
 	mqtt_broker_handle_t broker;
 
 	mqtt_init(&broker, "avengalvon");
-	mqtt_init_auth(&broker, "cid", "campeador");
+//	mqtt_init_auth(&broker, "cid", "campeador");
+	mqtt_init_will(&broker, will_topic, will_msg, 0, 0);
 	init_socket(&broker, "127.0.0.1", 1883);
 
 	// >>>>> CONNECT
