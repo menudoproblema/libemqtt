@@ -127,12 +127,6 @@ int read_packet(int timeout)
 	return packet_length;
 }
 
-
-
-
-
-
-
 int main(int argc, char* argv[])
 {
 	int packet_length;
@@ -140,7 +134,8 @@ int main(int argc, char* argv[])
 	mqtt_broker_handle_t broker;
 
 	mqtt_init(&broker, "avengalvon");
-	mqtt_init_auth(&broker, "cid", "campeador");
+//	mqtt_init_auth(&broker, "cid", "campeador");
+	mqtt_init_will(&broker, "hello/emqtt", "I Died", 2, 0);
 	init_socket(&broker, "127.0.0.1", 1883);
 
 	// >>>>> CONNECT

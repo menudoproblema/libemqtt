@@ -201,6 +201,13 @@ void mqtt_init(mqtt_broker_handle_t* broker, const char* clientid) {
 	broker->clean_session = 1;
 }
 
+void mqtt_init_will(mqtt_broker_handle_t* broker, const char * topic, const char *msg, uint8_t qos, uint8_t retain) {
+	broker->will_qos = qos;
+	broker->will_retain = retain;
+	broker->will_topic = topic;
+	broker->will_msg = msg;
+}
+
 void mqtt_init_auth(mqtt_broker_handle_t* broker, const char* username, const char* password) {
 	if(username && username[0] != '\0')
 		strncpy(broker->username, username, sizeof(broker->username)-1);
@@ -215,10 +222,19 @@ void mqtt_set_alive(mqtt_broker_handle_t* broker, uint16_t alive) {
 int mqtt_connect(mqtt_broker_handle_t* broker)
 {
 	uint8_t flags = 0x00;
+	uint16_t willMsgLen = 0;
+	uint16_t willTopicLen = 0;
 
 	uint16_t clientidlen = strlen(broker->clientid);
 	uint16_t usernamelen = strlen(broker->username);
 	uint16_t passwordlen = strlen(broker->password);
+	if (broker->will_msg != NULL) {
+		willMsgLen = strlen(broker->will_msg);
+	}
+	if (broker->will_topic != NULL) {
+		willTopicLen = strlen(broker->will_topic);
+	}
+
 	uint16_t payload_len = clientidlen + 2;
 
 	// Preparing the flags
@@ -232,6 +248,21 @@ int mqtt_connect(mqtt_broker_handle_t* broker)
 	}
 	if(broker->clean_session) {
 		flags |= MQTT_CLEAN_SESSION;
+	}
+	if (willTopicLen > 0 && willMsgLen > 0) {
+
+		payload_len += willTopicLen + 2;
+		payload_len += willMsgLen + 2;
+		flags |= MQTT_WILL_FLAG;
+
+		if (broker->will_retain) {
+			flags |= MQTT_WILL_RETAIN;
+		}
+		if (-1 < broker->will_qos && broker->will_qos < 3) {
+			flags |= (broker->will_qos << 3);
+		} else {
+			return -1;
+		}
 	}
 
 	// Variable header
@@ -278,6 +309,20 @@ int mqtt_connect(mqtt_broker_handle_t* broker)
 	memcpy(packet+offset, broker->clientid, clientidlen);
 	offset += clientidlen;
 
+	if (willTopicLen) {
+		packet[offset++] = willTopicLen>>8;
+		packet[offset++] = willTopicLen&0xFF;
+		memcpy(packet+offset, broker->will_topic, willTopicLen);
+		offset += willTopicLen;
+	}
+
+	if (willMsgLen) {
+		packet[offset++] = willMsgLen>>8;
+		packet[offset++] = willMsgLen&0xFF;
+		memcpy(packet+offset, broker->will_msg, willMsgLen);
+		offset += willMsgLen;
+	}
+
 	if(usernamelen) {
 		// Username - UTF encoded
 		packet[offset++] = usernamelen>>8;
@@ -295,7 +340,11 @@ int mqtt_connect(mqtt_broker_handle_t* broker)
 	}
 
 	// Send the packet
-	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet)) {
+	if (broker->send != NULL) {
+		if (broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet)) {
+			return -1;
+		}
+	} else {
 		return -1;
 	}
 

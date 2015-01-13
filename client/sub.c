@@ -202,7 +202,7 @@ int main()
 	signal(SIGINT, term);
 
 	// >>>>> SUBSCRIBE
-	mqtt_subscribe(&broker, "public/test/topic", &msg_id);
+	mqtt_subscribe(&broker, "hello/emqtt", &msg_id);
 	// <<<<< SUBACK
 	packet_length = read_packet(1);
 	if(packet_length < 0)
