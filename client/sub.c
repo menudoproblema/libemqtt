@@ -172,7 +172,7 @@ int main()
 
 	mqtt_init(&broker, "client-id");
 	//mqtt_init_auth(&broker, "quijote", "rocinante");
-	init_socket(&broker, "127.0.0.1", 1883, keepalive);
+	init_socket(&broker, "10.50.0.28", 1883, keepalive);
 
 	// >>>>> CONNECT
 	mqtt_connect(&broker);

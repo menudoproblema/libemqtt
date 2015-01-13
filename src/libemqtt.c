@@ -258,6 +258,11 @@ int mqtt_connect(mqtt_broker_handle_t* broker)
 		if (broker->will_retain) {
 			flags |= MQTT_WILL_RETAIN;
 		}
+		if (-1 < broker->will_qos && broker->will_qos < 3) {
+			flags |= (broker->will_qos << 3);
+		} else {
+			return -1;
+		}
 	}
 
 	// Variable header

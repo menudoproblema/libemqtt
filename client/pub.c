@@ -127,13 +127,6 @@ int read_packet(int timeout)
 	return packet_length;
 }
 
-
-
-
-
-static char *will_msg = "I Died\n";
-static char *will_topic = "response";
-
 int main(int argc, char* argv[])
 {
 	int packet_length;
@@ -142,8 +135,8 @@ int main(int argc, char* argv[])
 
 	mqtt_init(&broker, "avengalvon");
 //	mqtt_init_auth(&broker, "cid", "campeador");
-	mqtt_init_will(&broker, will_topic, will_msg, 0, 0);
-	init_socket(&broker, "127.0.0.1", 1883);
+	mqtt_init_will(&broker, "hello/emqtt", "I Died", 2, 0);
+	init_socket(&broker, "10.50.0.28", 1883);
 
 	// >>>>> CONNECT
 	mqtt_connect(&broker);
