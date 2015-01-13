@@ -28,7 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <netinet/tcp.h>
+#include <linux/tcp.h>
 
 
 #define RCVBUFSIZE 1024
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 	mqtt_init(&broker, "avengalvon");
 //	mqtt_init_auth(&broker, "cid", "campeador");
 	mqtt_init_will(&broker, "hello/emqtt", "I Died", 2, 0);
-	init_socket(&broker, "10.50.0.28", 1883);
+	init_socket(&broker, "127.0.0.1", 1883);
 
 	// >>>>> CONNECT
 	mqtt_connect(&broker);
