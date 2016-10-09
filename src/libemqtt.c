@@ -334,6 +334,10 @@ int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* ms
 	return mqtt_publish_with_qos(broker, topic, msg, retain, 0, NULL);
 }
 
+int mqtt_publish_binary(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint32_t msg_len, uint8_t retain) {
+	return mqtt_publish_binary_with_qos(broker, topic, msg, msg_len, retain, 0, NULL);
+}
+
 int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos, uint16_t* message_id) {
 	uint16_t topiclen = strlen(topic);
 	uint16_t msglen = strlen(msg);
@@ -404,6 +408,77 @@ int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const
 
 	return 1;
 }
+
+int mqtt_publish_binary_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint32_t msg_len, uint8_t retain, uint8_t qos, uint16_t* message_id) {
+	uint16_t topiclen = strlen(topic);
+
+	uint8_t qos_flag = MQTT_QOS0_FLAG;
+	uint8_t qos_size = 0; // No QoS included
+	if(qos == 1) {
+		qos_size = 2; // 2 bytes for QoS
+		qos_flag = MQTT_QOS1_FLAG;
+	}
+	else if(qos == 2) {
+		qos_size = 2; // 2 bytes for QoS
+		qos_flag = MQTT_QOS2_FLAG;
+	}
+
+	// Variable header
+	uint8_t var_header[topiclen+2+qos_size]; // Topic size (2 bytes), utf-encoded topic
+	memset(var_header, 0, sizeof(var_header));
+	var_header[0] = topiclen>>8;
+	var_header[1] = topiclen&0xFF;
+	memcpy(var_header+2, topic, topiclen);
+	if(qos_size) {
+		var_header[topiclen+2] = broker->seq>>8;
+		var_header[topiclen+3] = broker->seq&0xFF;
+		if(message_id) { // Returning message id
+			*message_id = broker->seq;
+		}
+		broker->seq++;
+	}
+
+	// Fixed header
+	// the remaining length is one byte for messages up to 127 bytes, then two bytes after that
+	// actually, it can be up to 4 bytes but I'm making the assumption the embedded device will only
+	// need up to two bytes of length (handles up to 16,383 (almost 16k) sized message)
+	uint8_t fixedHeaderSize = 2;    // Default size = one byte Message Type + one byte Remaining Length
+	uint16_t remainLen = sizeof(var_header)+msg_len;
+	if (remainLen > 127) {
+		fixedHeaderSize++;          // add an additional byte for Remaining Length
+	}
+	uint8_t fixed_header[fixedHeaderSize];
+    
+   // Message Type, DUP flag, QoS level, Retain
+   fixed_header[0] = MQTT_MSG_PUBLISH | qos_flag;
+	if(retain) {
+		fixed_header[0] |= MQTT_RETAIN_FLAG;
+   }
+   // Remaining Length
+   if (remainLen <= 127) {
+       fixed_header[1] = remainLen;
+   } else {
+       // first byte is remainder (mod) of 128, then set the MSB to indicate more bytes
+       fixed_header[1] = remainLen % 128;
+       fixed_header[1] = fixed_header[1] | 0x80;
+       // second byte is number of 128s
+       fixed_header[2] = remainLen / 128;
+   }
+
+	uint8_t packet[sizeof(fixed_header)+sizeof(var_header)+msg_len];
+	memset(packet, 0, sizeof(packet));
+	memcpy(packet, fixed_header, sizeof(fixed_header));
+	memcpy(packet+sizeof(fixed_header), var_header, sizeof(var_header));
+	memcpy(packet+sizeof(fixed_header)+sizeof(var_header), msg, msg_len);
+
+	// Send the packet
+	if(broker->send(broker->socket_info, packet, sizeof(packet)) < sizeof(packet)) {
+		return -1;
+	}
+
+	return 1;
+}
+
 
 int mqtt_pubrel(mqtt_broker_handle_t* broker, uint16_t message_id) {
 	uint8_t packet[] = {
