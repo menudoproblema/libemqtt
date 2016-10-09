@@ -227,7 +227,18 @@ int mqtt_disconnect(mqtt_broker_handle_t* broker);
  * @retval -1 On IO error.
  */
 int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain);
-
+/** Publish a message on a topic. This message will be published with 0 Qos level.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param topic The topic name.
+ * @param msg The message.
+ * @param msg_len Length of the message
+ * @param retain Enable or disable the Retain flag (values: 0 or 1).
+ *
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
+ */
+int mqtt_publish_binary(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint32_t msg_len, uint8_t retain);
 /** Publish a message on a topic.
  * @param broker Data structure that contains the connection information with the broker.
  * @param topic The topic name.
@@ -241,7 +252,20 @@ int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* ms
  * @retval -1 On IO error.
  */
 int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint8_t retain, uint8_t qos, uint16_t* message_id);
-
+/** Publish a message on a topic.
+ * @param broker Data structure that contains the connection information with the broker.
+ * @param topic The topic name.
+ * @param msg The message.
+ * @param msg_len Length of the message
+ * @param retain Enable or disable the Retain flag (values: 0 or 1).
+ * @param qos Quality of Service (values: 0, 1 or 2)
+ * @param message_id Variable that will store the Message ID, if the pointer is not NULL.
+ *
+ * @retval  1 On success.
+ * @retval  0 On connection error.
+ * @retval -1 On IO error.
+ */
+int mqtt_publish_binary_with_qos(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint32_t msg_len, uint8_t retain, uint8_t qos, uint16_t* message_id);
 /** Send a PUBREL message. It's used for PUBLISH message with 2 QoS level.
  * @param broker Data structure that contains the connection information with the broker.
  * @param message_id Message ID
