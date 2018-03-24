@@ -162,7 +162,7 @@ uint16_t mqtt_parse_pub_msg_ptr(const uint8_t* buf, const uint8_t **msg_ptr) {
 		// message starts at
 		// fixed header length + Topic (UTF encoded) + msg id (if QoS>0)
 		uint8_t rlb = mqtt_num_rem_len_bytes(buf);
-		uint8_t offset = (*(buf+1+rlb))<<8;	// topic UTF MSB
+		uint16_t offset = (*(buf+1+rlb))<<8;	// topic UTF MSB
 		offset |= *(buf+1+rlb+1);			// topic UTF LSB
 		offset += (1+rlb+2);				// fixed header + topic size
 
@@ -368,7 +368,7 @@ int mqtt_publish_with_qos(mqtt_broker_handle_t* broker, const char* topic, const
 	// the remaining length is one byte for messages up to 127 bytes, then two bytes after that
 	// actually, it can be up to 4 bytes but I'm making the assumption the embedded device will only
 	// need up to two bytes of length (handles up to 16,383 (almost 16k) sized message)
-	uint8_t fixedHeaderSize = 2;    // Default size = one byte Message Type + one byte Remaining Length
+	uint16_t fixedHeaderSize = 2;    // Default size = one byte Message Type + one byte Remaining Length
 	uint16_t remainLen = sizeof(var_header)+msglen;
 	if (remainLen > 127) {
 		fixedHeaderSize++;          // add an additional byte for Remaining Length
