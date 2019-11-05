@@ -114,7 +114,7 @@ uint16_t mqtt_parse_rem_len(const uint8_t* buf);
  *
  * @retval message id
  */
-uint8_t mqtt_parse_msg_id(const uint8_t* buf);
+uint16_t mqtt_parse_msg_id(const uint8_t* buf);
 
 /** Parse a packet buffer for the publish topic.
  *
